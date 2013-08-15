@@ -23,18 +23,24 @@ void	wait_any_key();
 void	print_help();
 
 int main(int argc, char* argv[]) {
-	long	totwords, totdoc, s_labelset, i;
+	long	i, j, k;
+	long	totwords, totdoc, s_labelset, cur_s_labelset, sub_s_labelset;
+	long*	cur_labelset, * sub_labelset, * sub_labelset_id, * cluster;
 	double* label;
 	char	docfile[200];           /* file with training examples */
 	char	modelfile[200];         /* file for resulting classifier */
 	char	restartfile[200];       /* file with initial alphas */
 	char	confmatfile[200];		/* file to store the confusion matrix */
-	double* confusion_matrix;
+	double* confusion_matrix, * w;
 	DOC**	docs;					/* training examples */
 	LEARN_PARM learn_parm;
 	KERNEL_PARM kernel_parm;
 	MODEL** model;
-	queue<LabelTreeNode*> pipe;
+	queue<LabelTreeNode*> pipeline;
+	Stat labelstat;
+	StatTable<long>* clusterstat;
+	LabelTree label_tree;
+	LabelTreeNode* parent, * child;
 
 	read_input_parameters(argc, argv, docfile,
 						  modelfile, restartfile, confmatfile,
@@ -42,11 +48,13 @@ int main(int argc, char* argv[]) {
 	read_documents(docfile, &docs, &label, &totwords, &totdoc);
 	/* Now "label" stores the labels for each doc */
 
-	Stat labelstat(label, totdoc);
+	labelstat.init(label, totdoc);
 
 	s_labelset = labelstat.length();
-	model = (MODEL **)my_malloc(sizeof(MODEL *) * s_labelset);
 	confusion_matrix = new double[s_labelset * s_labelset];
+	w = new double[s_labelset * s_labelset];
+	cluster = new long[s_labelset];
+	model = (MODEL **)my_malloc(sizeof(MODEL *) * s_labelset);
 	for (long i = 0; i < s_labelset; i++) {
 		model[i] = (MODEL *)my_malloc(sizeof(MODEL) * s_labelset);
 	}
@@ -59,8 +67,51 @@ int main(int argc, char* argv[]) {
 	get_confusion_matrix(confusion_matrix,
 						 docs, labelstat, model, confmatfile);
 	
-	
-	
+	cur_s_labelset = s_labelset;
+	cur_labelset = new long[cur_s_labelset];
+	for (i = 0; i < cur_s_labelset; i++) {
+		cur_labelset[i] = i;
+	}
+	label_tree.init(nary, cur_labelset, cur_s_labelset);
+	pipeline.push(label_tree.root());
+	while (!pipeline.empty()) {
+		parent = pipeline.front();
+		cur_labelset = parent->labels();
+		cur_s_labelset = parent->num_of_labels();
+		if (cur_s_labelset <= nary) {
+			for (i = 0; i < cur_s_labelset; i++) {
+				sub_labelset = new long[1];
+				sub_labelset[0] = cur_labelset[i];
+				child = new LabelTreeNode(nary, sub_labelset, 1);
+				parent->attach_child(child);
+			}
+		}
+		else {
+			/* construct the sub- similarity matrix */
+			k = 0;
+			for (i = 0; i < cur_s_labelset; i++) {
+				for (j = 0; j < cur_s_labelset; j++) {
+					w[k++] = confusion_matrix[ cur_labelset[i] * s_labelset 
+											 + cur_labelset[j] ];
+				}
+			}
+			spectral_clustering(cluster, w, cur_s_labelset, nary);
+			clusterstat = new StatTable<long>(cluster, cur_s_labelset);
+			for (i = 0; i < nary; i++) {
+				sub_labelset_id = (*clusterstat)[i];
+				sub_s_labelset = clusterstat->num(i);
+				sub_labelset = new long[sub_s_labelset];
+				for (j = 0; j < sub_s_labelset; j++) {
+					sub_labelset[j] = cur_labelset[sub_labelset_id[j]];
+				}
+				child = new LabelTreeNode(nary, sub_labelset, sub_s_labelset);
+				parent->attach_child(child);
+				pipeline.push(child);
+			}
+			delete clusterstat;
+		}
+		pipeline.pop();
+	}
 
 	for (i = 0; i < s_labelset; i++) {
 		free_model(model[i], 0);
@@ -69,6 +120,8 @@ int main(int argc, char* argv[]) {
 		free_example(docs[i], 1);
 	}
 	delete[] confusion_matrix;
+	delete[] w;
+	delete[] cluster;
 	free(docs);
 	free(label);
 	return 0;

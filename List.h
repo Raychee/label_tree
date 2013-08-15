@@ -55,12 +55,12 @@ private:
 template <class _T>
 ListNode<_T>::ListNode(_T data):
 			  data_(data), next_(NULL) {
-	cout << "Constructor: ListNode<_T>(_T data_ = " << data << ")" << endl;
+	// cout << "Constructor: ListNode<_T>(_T data_ = " << data << ")" << endl;
 }
 
 template <class _T>
 ListNode<_T>::~ListNode() {
-	cout << "Destructor: ListNode<_T>(_T data_ = " << data_ << ")" << endl;
+	// cout << "Destructor: ListNode<_T>(_T data_ = " << data_ << ")" << endl;
 }
 
 template <class _T>
@@ -86,13 +86,13 @@ inline void ListNode<_T>::set_next(ListNode<_T>* next)
 template <class _T>
 ListNode<_T*>::ListNode(_T* data):
 				data_(data), next_(NULL) {
-	cout << "Constructor: ListNode<_T *>(_T *data_ = " << data << ")" << endl;
+	// cout << "Constructor: ListNode<_T *>(_T *data_ = " << data << ")" << endl;
 }
 
 template <class _T>
 ListNode<_T*>::~ListNode() {
 	delete data_;
-	cout << "Destructor: ListNode<_T>(_T data_ = " << data_ << ")" << endl;
+	// cout << "Destructor: ListNode<_T>(_T data_ = " << data_ << ")" << endl;
 }
 
 template <class _T>
@@ -122,15 +122,15 @@ List<_L, _T>::List():
 template <typename _L, class _T>
 List<_L, _T>::List(_L label): 
 			  head_(NULL), tail_(NULL), length_(0), label_(label) {
-	cout << "Constructor: List<_L, _T>(_L label_ = " << label << ")" << endl;
+	// cout << "Constructor: List<_L, _T>(_L label_ = " << label << ")" << endl;
 }
 
 template <typename _L, class _T>
 List<_L, _T>::List(_L label, _T data):
 			  length_(1), label_(label) {
 	head_ = tail_ = new ListNode<_T>(data);
-	cout << "Constructor: List<_L, _T>(_L label_ = " << label
-		 << ", _T data_ = " << data << ")" << endl;
+	// cout << "Constructor: List<_L, _T>(_L label_ = " << label
+		 // << ", _T data_ = " << data << ")" << endl;
 }
 
 template <typename _L, class _T>
@@ -142,7 +142,7 @@ List<_L, _T>::~List() {
 		delete ptr;
 		ptr = ptr_next;
 	}
-	cout << "Destructor: List<_L, _T>(_L label_ = " << label_ << ")" << endl;
+	// cout << "Destructor: List<_L, _T>(_L label_ = " << label_ << ")" << endl;
 }
 
 template <typename _L, class _T>

@@ -224,8 +224,7 @@ double* get_confusion_matrix(double* confusion_matrix,
 	return confusion_matrix;
 }
 
-long* spectral_clustering(long* cluster, double* W_, long n, long k, 
-						  bool* mask) {
+long* spectral_clustering(long* cluster, double* W_, long n, long k) {
 /*
 	Warning: 
 			This implementation is NOT reliable. Due to the restrictions of the 

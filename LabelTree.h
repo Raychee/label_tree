@@ -7,6 +7,7 @@
 
 using std::cerr;
 using std::endl;
+using std::queue;
 
 
 class LabelTreeNode {
@@ -36,10 +37,12 @@ private:
 
 class LabelTree {
 public:
-	LabelTree(LabelTreeNode root);
+	LabelTree() {}
+	LabelTree(LabelTreeNode* root);
 	LabelTree(int nary);
 	~LabelTree();
-	const LabelTreeNode* root() const;
+	LabelTree& init(int nary, long* labelset, long s_labelset);
+	LabelTreeNode* root() const;
 private:
 	LabelTreeNode* root_;
 };
@@ -128,17 +131,26 @@ LabelTree::LabelTree(int nary) {
 LabelTree::~LabelTree() {
 	queue<LabelTreeNode*> pipeline;
 	LabelTreeNode* cur;
-
+	LabelTreeNode** cur_ch;
+	int cur_n_ch;
 	pipeline.push(root_);
-	while (!pipe.empty()) {
-		cur = pipe.front();
-		for (int i = 0; i < count; i++) {
-			/* code */
+	while (!pipeline.empty()) {
+		cur = pipeline.front();
+		cur_ch = cur->children();
+		cur_n_ch = cur->num_of_children();
+		for (int i = 0; i < cur_n_ch; i++) {
+			pipeline.push(cur_ch[i]);
 		}
+		pipeline.pop();
+		delete cur;
 	}
 }
 
 /**** Methods ****/
-inline const LabelTreeNode* LabelTree::root() const { return root_; }
+LabelTree& LabelTree::init(int nary, long* labelset, long s_labelset) {
+	root_ = new LabelTreeNode(nary, labelset, s_labelset);
+	return *this;
+}
+inline LabelTreeNode* LabelTree::root() const { return root_; }
 
 # endif

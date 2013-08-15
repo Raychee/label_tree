@@ -11,8 +11,10 @@ using std::endl;
 
 template <typename _L> class StatTable {
 public:
+	StatTable() {}
 	StatTable(_L* label, long s_label);
 	~StatTable();
+	const StatTable<_L>& init(_L* label, long s_label);
 	long length() const;
 	long num(long i) const;
 	_L label(long i) const;
@@ -25,13 +27,27 @@ private:
 };
 
 template <typename _L>
-ostream &operator<<(ostream &out, const StatTable<_L> &table);
+ostream& operator<<(ostream& out, const StatTable<_L>& table);
 
 typedef StatTable<double> Stat;
 
 /***** Class StatTable Function Definition *****/
 template <typename _L>
-StatTable<_L>::StatTable(_L* label, long s_label) {
+StatTable<_L>::StatTable(_L* label, long s_label) { init(label, s_label); }
+
+template <typename _L>
+StatTable<_L>::~StatTable() {
+	for (int i = 0; i < length_; i++) {
+		delete[] idx[i];
+	}
+	delete[] idx;
+	delete[] num_;
+	delete[] label_;
+	cout << "Destructor : StatTable" << endl;
+}
+
+template <typename _L>
+const StatTable<_L>& StatTable<_L>::init(_L* label, long s_label) {
 /*
 	Parameters:
 		label:			Label of every sample
@@ -82,17 +98,7 @@ StatTable<_L>::StatTable(_L* label, long s_label) {
 	if (verbosity >= 1) {
 		cout << "Done.\nTotal number of labels: " << length_ << endl;
 	}
-}
-
-template <typename _L>
-StatTable<_L>::~StatTable() {
-	for (int i = 0; i < length_; i++) {
-		delete[] idx[i];
-	}
-	delete[] idx;
-	delete[] num_;
-	delete[] label_;
-	cout << "Destructor : StatTable" << endl;
+	return *this;
 }
 
 template <typename _L>
@@ -109,7 +115,7 @@ inline long* StatTable<_L>::operator[](long i) const { return idx[i]; }
 
 
 template <typename _L>
-ostream &operator<<(ostream &out, const StatTable<_L> &table) {
+ostream& operator<<(ostream& out, const StatTable<_L>& table) {
 	long length = table.length();
 	long num, * idx;
 	out << "Total number of labels: " << length << endl;

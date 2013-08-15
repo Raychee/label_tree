@@ -22,8 +22,7 @@ long classify_multi_one_vs_rest(MODEL** model, long s_labelset, DOC* ex);
 double* get_confusion_matrix(double* confusion_matrix,
 							 DOC** docs, Stat& labelstat, MODEL** model,
 							 char* confmatfile = NULL);
-long* spectral_clustering(long* cluster, double* W_, long n, long k, 
-						  bool* mask = NULL);
+long* spectral_clustering(long* cluster, double* W_, long n, long k);
 
 /***** Miscellaneous *****/
 void write_confusion_matrix(char* confmatfile, double* confusion_matrix, 

@@ -1,5 +1,5 @@
-CC = c++
-LD = c++
+CC = g++
+LD = g++
 CFLAGS = -Wall -W -ggdb3
 LDFLAGS = -Wall -W -ggdb3
 LIBS = -Lsvm_light -lsvmlight -lopencv_core
@@ -14,7 +14,8 @@ $(TARGET): $(OBJ) svm_light/libsvmlight.dylib
 main.o: main.cpp label_tree_common.o
 	$(CC) $(CFLAGS) -c $<
 	
-label_tree_common.o: label_tree_common.cpp label_tree_common.h StatTable.h List.h
+label_tree_common.o: label_tree_common.cpp label_tree_common.h \
+					 StatTable.h LabelTree.h List.h
 	$(CC) $(CFLAGS) -c $<
 
 
