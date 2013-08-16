@@ -6,6 +6,8 @@
 # include <iomanip>
 # include <queue>
 # include "label_tree_common.h"
+# include "LabelTree.h"
+
 
 using std::cin;
 using std::cout;
@@ -49,6 +51,7 @@ int main(int argc, char* argv[]) {
 	/* Now "label" stores the labels for each doc */
 
 	labelstat.init(label, totdoc);
+	cout << labelstat << endl;
 
 	s_labelset = labelstat.length();
 	confusion_matrix = new double[s_labelset * s_labelset];
@@ -79,11 +82,13 @@ int main(int argc, char* argv[]) {
 		cur_labelset = parent->labels();
 		cur_s_labelset = parent->num_of_labels();
 		if (cur_s_labelset <= nary) {
-			for (i = 0; i < cur_s_labelset; i++) {
-				sub_labelset = new long[1];
-				sub_labelset[0] = cur_labelset[i];
-				child = new LabelTreeNode(nary, sub_labelset, 1);
-				parent->attach_child(child);
+			if (cur_s_labelset > 1) {
+				for (i = 0; i < cur_s_labelset; i++) {
+					sub_labelset = new long[1];
+					sub_labelset[0] = cur_labelset[i];
+					child = new LabelTreeNode(nary, sub_labelset, 1);
+					parent->attach_child(child);
+				}
 			}
 		}
 		else {
@@ -112,6 +117,8 @@ int main(int argc, char* argv[]) {
 		}
 		pipeline.pop();
 	}
+
+	cout << label_tree << endl;
 
 	for (i = 0; i < s_labelset; i++) {
 		free_model(model[i], 0);

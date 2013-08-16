@@ -9,7 +9,6 @@ extern "C" {
 }
 
 # include "StatTable.h"
-# include "LabelTree.h"
 
 /* Operations on labels */
 

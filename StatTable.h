@@ -7,6 +7,7 @@
 
 using std::ostream;
 using std::setw;
+using std::flush;
 using std::endl;
 
 template <typename _L> class StatTable {
@@ -43,7 +44,7 @@ StatTable<_L>::~StatTable() {
 	delete[] idx;
 	delete[] num_;
 	delete[] label_;
-	cout << "Destructor : StatTable" << endl;
+	// cout << "Destructor : StatTable" << endl;
 }
 
 template <typename _L>
@@ -61,7 +62,7 @@ const StatTable<_L>& StatTable<_L>::init(_L* label, long s_label) {
 	
 	/* Count the total number of labels */
 	if (verbosity >= 1) {
-		cout << "Calculating statistics of labels..." << endl;
+		cout << "Calculating statistics of labels..." << flush;
 	}
 	for (i = 1; i < s_label; i++) {
 		stat = labelstat.head();
@@ -118,16 +119,16 @@ template <typename _L>
 ostream& operator<<(ostream& out, const StatTable<_L>& table) {
 	long length = table.length();
 	long num, * idx;
-	out << "Total number of labels: " << length << endl;
+	out << "Total number of labels: " << length;
 	for (int i = 0; i < length; i++) {
 		num = table.num(i);
 		idx = table[i];
-		out << setw(3) << table.label(i) << " (" << setw(3) << num << ")\t"
+		out << "\n" << setw(3) << table.label(i)
+			<< " (" << setw(3) << num << ")\t"
 			<< setw(3) << idx[0];
 		for (int j = 1; j < num; j++) {
 			out << " - " << setw(3) << idx[j];
 		}
-		out << endl;
 	}
 	return out;
 }

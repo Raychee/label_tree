@@ -166,7 +166,9 @@ double* get_confusion_matrix(double* confusion_matrix,
 			confusion_matrix[ k * s_labelset + 
 				classify_multi_one_vs_rest(model, s_labelset, docs[idx[i]])]++;
 		}
-
+		for (i = 0; i < s_labelset; i++) {
+			confusion_matrix[ i * s_labelset + i ] = 0;
+		}
 		if (verbosity >= 1) {
 			cout << "Done." << endl;
 		}
