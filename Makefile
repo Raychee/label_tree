@@ -1,11 +1,14 @@
 include Makefile.inc
 
 CFLAGS = -Wall -W -ggdb3 -pedantic -pipe
-LFLAGS = 
-LIBS = -L./svm_light -lsvmlight -lopencv_core -lstdc++
+LFLAGS = -Wl,-rpath='$$ORIGIN/svm_light'
+LIBS = -L./svm_light -lsvmlight -lopencv_core
 TARGET = main
 OBJ = main.o label_tree_common.o LabelTree.o
 
+ifeq ($(LD) $(OS), clang LINUX)
+LIBS += -lstdc++
+endif
 
 $(TARGET): $(OBJ) svm_light/libsvmlight.$(LIB_SUFFIX)
 	$(LD) $(LFLAGS) -o $(TARGET) $(OBJ) $(LIBS)

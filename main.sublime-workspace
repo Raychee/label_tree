@@ -5,7 +5,11 @@
 		[
 			[
 				"la",
-				"label_tree"
+				"LabelTree"
+			],
+			[
+				"temp",
+				"template"
 			],
 			[
 				"LI",
@@ -23,7 +27,39 @@
 			"file": "Makefile",
 			"settings":
 			{
-				"buffer_size": 643,
+				"buffer_size": 802,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "label_tree_common.cpp",
+			"settings":
+			{
+				"buffer_size": 8745,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "main.cpp",
+			"settings":
+			{
+				"buffer_size": 13820,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Makefile.inc",
+			"settings":
+			{
+				"buffer_size": 116,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "LabelTree.cpp",
+			"settings":
+			{
+				"buffer_size": 3216,
 				"line_ending": "Unix"
 			}
 		},
@@ -31,7 +67,23 @@
 			"file": "svm_light/Makefile",
 			"settings":
 			{
-				"buffer_size": 667,
+				"buffer_size": 643,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "List.h",
+			"settings":
+			{
+				"buffer_size": 3836,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "StatTable.h",
+			"settings":
+			{
+				"buffer_size": 3404,
 				"line_ending": "Unix"
 			}
 		},
@@ -39,7 +91,15 @@
 			"file": "LabelTree.h",
 			"settings":
 			{
-				"buffer_size": 4912,
+				"buffer_size": 1815,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "label_tree_common.h",
+			"settings":
+			{
+				"buffer_size": 839,
 				"line_ending": "Unix"
 			}
 		}
@@ -69,10 +129,11 @@
 	"file_history":
 	[
 		"/home/raychee/.bashrc",
+		"/home/raychee/Desktop/label_tree/LabelTree.h",
+		"/home/raychee/Desktop/label_tree/svm_light/Makefile",
 		"/home/raychee/Desktop/label_tree/Makefile.inc",
 		"/home/raychee/Desktop/label_tree/svm_light/Makefile_svmlight",
 		"/home/raychee/Desktop/label_tree/Makefile",
-		"/home/raychee/Desktop/label_tree/LabelTree.h",
 		"/usr/share/applications/matlab.desktop",
 		"/usr/share/applications/MATLAB.desktop",
 		"/usr/share/applications/transmission-gtk.desktop",
@@ -96,6 +157,9 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"LDFLAGS",
+			"_T",
+			"T",
 			"clang",
 			"g++",
 			"clang"
@@ -124,15 +188,15 @@
 					"file": "Makefile",
 					"settings":
 					{
-						"buffer_size": 643,
+						"buffer_size": 802,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								288,
-								288
+								264,
+								264
 							]
 						],
 						"settings":
@@ -152,18 +216,125 @@
 				},
 				{
 					"buffer": 1,
-					"file": "svm_light/Makefile",
+					"file": "label_tree_common.cpp",
 					"settings":
 					{
-						"buffer_size": 667,
+						"buffer_size": 8745,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								43,
-								43
+								700,
+								700
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "main.cpp",
+					"settings":
+					{
+						"buffer_size": 13820,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3744,
+								3744
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1530.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "Makefile.inc",
+					"settings":
+					{
+						"buffer_size": 116,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								92,
+								92
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "LabelTree.cpp",
+					"settings":
+					{
+						"buffer_size": 3216,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								265,
+								265
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "svm_light/Makefile",
+					"settings":
+					{
+						"buffer_size": 643,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								170,
+								170
 							]
 						],
 						"settings":
@@ -183,19 +354,19 @@
 			"sheets":
 			[
 				{
-					"buffer": 2,
-					"file": "LabelTree.h",
+					"buffer": 6,
+					"file": "List.h",
 					"settings":
 					{
-						"buffer_size": 4912,
+						"buffer_size": 3836,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								4288,
-								4288
+								166,
+								166
 							]
 						],
 						"settings":
@@ -204,7 +375,95 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 2544.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "StatTable.h",
+					"settings":
+					{
+						"buffer_size": 3404,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								172,
+								172
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "LabelTree.h",
+					"settings":
+					{
+						"buffer_size": 1815,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1815,
+								1815
+							]
+						],
+						"settings":
+						{
+							"rulers":
+							[
+								80
+							],
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "label_tree_common.h",
+					"settings":
+					{
+						"buffer_size": 839,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								195,
+								195
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -261,8 +520,16 @@
 		"selected_items":
 		[
 			[
+				"make",
+				"svm_light/Makefile"
+			],
+			[
 				"",
-				"svm_light/Makefile_svmlight"
+				"Makefile.inc"
+			],
+			[
+				"mai",
+				"main.cpp"
 			]
 		],
 		"width": 0.0

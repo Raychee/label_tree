@@ -1,4 +1,4 @@
-OS = LINUX
+OS ?= LINUX
 
 ifeq ($(OS), LINUX)
 LIB_SUFFIX = so

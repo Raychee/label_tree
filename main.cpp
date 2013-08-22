@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		else {
-			/* construct the sub- similarity matrix */
+			/* construct the sub similarity matrix */
 			k = 0;
 			for (i = 0; i < cur_s_labelset; i++) {
 				for (j = 0; j < cur_s_labelset; j++) {

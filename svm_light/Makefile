@@ -4,13 +4,15 @@ CFLAGS = -O3 -fPIC
 LFLAGS = -O3
 OBJ = svm_learn_main.o svm_learn.o svm_common.o svm_hideo.o
 
+ifeq ($(OS), LINUX)
+LFLAGS += -shared
+else
+LFLAGS += -dynamiclib
+endif
+
 
 libsvmlight.$(LIB_SUFFIX): $(OBJ)
-ifeq ($(OS), LINUX)
-	$(LD) $(LFLAGS) -shared $(OBJ) -o libsvmlight.so 
-else
-	$(LD) $(LFLAGS) -dynamiclib $(OBJ) -o libsvmlight.dylib
-endif
+	$(LD) $(LFLAGS) $(OBJ) -o libsvmlight.so 
 
 svm_hideo.o: svm_hideo.c
 	$(CC) -c $(CFLAGS) svm_hideo.c -o svm_hideo.o
