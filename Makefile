@@ -1,14 +1,13 @@
-CC = c++
-LD = c++
+include Makefile.inc
+
 CFLAGS = -Wall -W -ggdb3
 LDFLAGS = -Wall -W -ggdb3
-LIBS = -Lsvm_light -lsvmlight -lopencv_core
+LIBS = -Lsvm_light -lsvmlight -lopencv_core -lstdc++
 TARGET = main
 OBJ = main.o label_tree_common.o
 
 
-
-$(TARGET): $(OBJ) svm_light/libsvmlight.dylib
+$(TARGET): $(OBJ) svm_light/libsvmlight.$(LIB_SUFFIX)
 	$(LD) $(LDFLAGS) -o $(TARGET) $(OBJ) $(LIBS)
 	
 main.o: main.cpp label_tree_common.o LabelTree.h
@@ -18,15 +17,9 @@ label_tree_common.o: label_tree_common.cpp label_tree_common.h \
 					 StatTable.h List.h
 	$(CC) $(CFLAGS) -c $<
 
-
-# gurantee the access to the library of svm_light
-# FOR MAC OS ONLY!
-svm_light/libsvmlight.dylib: 
-	cd svm_light; make -f Makefile_MacOS
-
 # FOR LINUX SYSTEMS
-#svm_light/libsvmlight.so:
-#	cd svm_light; make libsvmlight_hideo
+svm_light/libsvmlight.$(LIB_SUFFIX):
+	cd svm_light; make
 
 
 .PHONY: clean cleanall
