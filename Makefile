@@ -1,23 +1,25 @@
 include Makefile.inc
 
-CFLAGS = -Wall -W -ggdb3
-LDFLAGS = -Wall -W -ggdb3
-LIBS = -Lsvm_light -lsvmlight -lopencv_core -lstdc++
+CFLAGS = -Wall -W -ggdb3 -pedantic -pipe
+LFLAGS = 
+LIBS = -L./svm_light -lsvmlight -lopencv_core -lstdc++
 TARGET = main
-OBJ = main.o label_tree_common.o
+OBJ = main.o label_tree_common.o LabelTree.o
 
 
 $(TARGET): $(OBJ) svm_light/libsvmlight.$(LIB_SUFFIX)
-	$(LD) $(LDFLAGS) -o $(TARGET) $(OBJ) $(LIBS)
+	$(LD) $(LFLAGS) -o $(TARGET) $(OBJ) $(LIBS)
 	
-main.o: main.cpp label_tree_common.o LabelTree.h
-	$(CC) $(CFLAGS) -c $<
+main.o: main.cpp label_tree_common.o LabelTree.o
+	$(CC) $(CFLAGS) -c -o $@ $<
 	
 label_tree_common.o: label_tree_common.cpp label_tree_common.h \
 					 StatTable.h List.h
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-# FOR LINUX SYSTEMS
+LabelTree.o: LabelTree.cpp LabelTree.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 svm_light/libsvmlight.$(LIB_SUFFIX):
 	cd svm_light; make
 

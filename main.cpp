@@ -8,10 +8,10 @@
 # include "label_tree_common.h"
 # include "LabelTree.h"
 
-
 using std::cin;
 using std::cout;
 using std::endl;
+using std::queue;
 
 const int nary = 2;
 

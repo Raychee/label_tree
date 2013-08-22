@@ -10,6 +10,10 @@ using std::setw;
 using std::flush;
 using std::endl;
 
+template <typename _L> class StatTable;
+template <typename _L>
+ostream& operator<<(ostream& out, const StatTable<_L>& table);
+
 template <typename _L> class StatTable {
 public:
 	StatTable() {}
@@ -20,6 +24,7 @@ public:
 	long num(long i) const;
 	_L label(long i) const;
 	long* operator[](long i) const;
+	friend ostream& operator<< <_L>(ostream& out, const StatTable<_L>& table);
 private:
 	long length_;
 	_L* label_;
@@ -27,8 +32,6 @@ private:
 	long** idx;
 };
 
-template <typename _L>
-ostream& operator<<(ostream& out, const StatTable<_L>& table);
 
 typedef StatTable<double> Stat;
 

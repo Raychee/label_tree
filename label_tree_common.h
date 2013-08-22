@@ -10,8 +10,6 @@ extern "C" {
 
 # include "StatTable.h"
 
-/* Operations on labels */
-
 /* Machine learning */
 MODEL** learn_multi_one_vs_rest(MODEL** model, DOC** docs, long s_label,
 							   long totwords, LEARN_PARM* learn_parm,

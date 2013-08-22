@@ -182,29 +182,4 @@ inline void List<_L, _T>::add(_T data) {
 	length_++;
 }
 
-/*
-typedef struct node {
-	void *data;
-	struct node *next;
-} NODE;
-
-typedef struct {
-	NODE *head;
-	NODE *tail;
-	long length;
-	int type;
-	double label;
-} LIST;
-*/
-
-/* Operations on linked lists */
-/*
-LIST *create_empty_list(int, double);
-LIST *create_list(int, double, void *);
-NODE *create_node(int, void *);
-void add_node(LIST *, NODE *);
-void add_to_list(LIST *, void *);
-void free_list(LIST *);
-*/
-
 #endif
