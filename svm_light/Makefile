@@ -1,18 +1,18 @@
 include ../Makefile.inc
 
 CFLAGS = -O3 -fPIC
-LFLAGS = -O3
+LFLAGS = 
 OBJ = svm_learn_main.o svm_learn.o svm_common.o svm_hideo.o
 
 ifeq ($(OS), LINUX)
 LFLAGS += -shared
 else
-LFLAGS += -dynamiclib
+LFLAGS += -dynamiclib -Wl,-install_name,@rpath/libsvmlight.$(LIB_SUFFIX)
 endif
 
 
 libsvmlight.$(LIB_SUFFIX): $(OBJ)
-	$(LD) $(LFLAGS) $(OBJ) -o libsvmlight.so 
+	$(LD) $(LFLAGS) $(OBJ) -o libsvmlight.$(LIB_SUFFIX)
 
 svm_hideo.o: svm_hideo.c
 	$(CC) -c $(CFLAGS) svm_hideo.c -o svm_hideo.o

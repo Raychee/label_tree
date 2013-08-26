@@ -107,7 +107,8 @@ ostream& operator<<(ostream& out, LabelTree& tree) {
 	LabelTreeNode** cur_ch;
 	long* labels, n_labels;
 	int cur_n_ch;
-	pipeline.push(tree.root());
+	out << "Tree Nodes are as follows (start from root):";
+	pipeline.push(tree.root_);
 	while (!pipeline.empty()) {
 		cur = pipeline.front();
 		cur_ch = cur->children();
