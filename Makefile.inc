@@ -1,4 +1,5 @@
-OS ?= LINUX
+OS ?= MAC
+SCHEME ?= DEBUG
 
 ifeq ($(OS), LINUX)
 LIB_SUFFIX = so
@@ -8,3 +9,11 @@ endif
 
 CC = clang
 LD = clang
+
+ifeq ($(SCHEME), DEBUG)
+CFLAGS = -Wall -Wextra -pedantic -pipe -ggdb3
+LFLAGS = 
+else
+CFLAGS = -pipe -O3
+LFLAGS =
+endif

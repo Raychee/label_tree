@@ -27,7 +27,7 @@ void	print_help();
 int main(int argc, char* argv[]) {
 	long	i, j, k;
 	long	totwords, totdoc, s_labelset, cur_s_labelset, sub_s_labelset;
-	long*	cur_labelset, * sub_labelset, * sub_labelset_id, * cluster;
+	long	* cur_labelset, * sub_labelset, * sub_labelset_id, * cluster;
 	double* label;
 	char	docfile[200];           /* file with training examples */
 	char	modelfile[200];         /* file for resulting classifier */
