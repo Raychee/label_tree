@@ -32,7 +32,7 @@ typedef struct {
     JSGD_X_FULL,        /* plain dense matrix */
     JSGD_X_SPARSE,      /* sparse matrix */
     JSGD_X_PQ,          /* PQ-encoded matrix */
-    JSGD_X_PQ_SPARSE,   /* Xerox-style sparse PQ (not implemented) */
+    JSGD_X_PQ_SPARSE    /* Xerox-style sparse PQ (not implemented) */
   } encoding; 
 
   long n;               /* number of vectors */

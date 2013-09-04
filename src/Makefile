@@ -1,8 +1,8 @@
 include ../Makefile.inc
 
-LIBS = -L../lib -lsvmlight -lopencv_core -ljsgd
-TARGET = main
+LIBS = -L../lib -lsvmlight -ljsgd -lopencv_core
 OBJ = main.o label_tree_common.o LabelTree.o
+TARGET = main
 
 ifeq ($(OS), LINUX)
 LFLAGS += -Wl,-rpath,'$$ORIGIN/../lib'
@@ -30,10 +30,13 @@ LabelTree.o: LabelTree.cpp LabelTree.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
-.PHONY: svm_light jsgd
+.PHONY: svm_light jsgd test
 
 jsgd:
 	cd jsgd; make
 
 svm_light:
 	cd svm_light; make
+
+test:
+	$(CC) $(CFLAGS) $(LFLAGS) $(LIBS) test.cpp -o ../bin/test

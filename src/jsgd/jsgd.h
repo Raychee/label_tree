@@ -36,6 +36,7 @@ typedef struct {
     JSGD_ALGO_LOG, /*Multinomial logistic regression */
     JSGD_ALGO_STF, /*Stiff logistic loss */
     JSGD_ALGO_SQR, /* Multiclass Square loss */
+    JSGD_ALGO_LTL  /* Label tree joint loss */
   } algo;
 
   long n_epoch;            /* number of samples visited */
@@ -61,7 +62,7 @@ typedef struct {
   enum {
     JSGD_AVG_NONE, /*No averaging (returns final w)*/
     JSGD_AVG_WGT,  /*weighted average (returns  2/(T*(T+1)) sum t*w)*/
-    JSGD_AVG_OPT,  /*Optimal averaging (returns sum w over the last alpha*T */
+    JSGD_AVG_OPT   /*Optimal averaging (returns sum w over the last alpha*T */
   } avg;
 
   float rho; /* In (0,1], proportion of last weights to take into account for averaging. */

@@ -1,10 +1,13 @@
-.PHONY: main clean cleanall
+.PHONY: main test clean cleanall
 
 main:
 	cd src; make
 
+test:
+	cd src; make test
+
 clean:
-	rm -rf *.o
+	rm -f src/*/*.o src/*.o
 
 cleanall:
 	rm -f src/*/*.o src/*.o src/*.dSYM
