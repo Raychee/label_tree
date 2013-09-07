@@ -35,8 +35,7 @@ typedef struct {
     JSGD_ALGO_WAR, /*weighted average ranking */
     JSGD_ALGO_LOG, /*Multinomial logistic regression */
     JSGD_ALGO_STF, /*Stiff logistic loss */
-    JSGD_ALGO_SQR, /* Multiclass Square loss */
-    JSGD_ALGO_LTL  /* Label tree joint loss */
+    JSGD_ALGO_SQR  /* Multiclass Square loss */
   } algo;
 
   long n_epoch;            /* number of samples visited */

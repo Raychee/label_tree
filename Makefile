@@ -10,5 +10,5 @@ clean:
 	rm -f src/*/*.o src/*.o
 
 cleanall:
-	rm -f src/*/*.o src/*.o src/*.dSYM
-	rm -f bin/*
+	rm -f src/*/*.o src/*.o
+	rm -f bin/* bin/*.dSYM

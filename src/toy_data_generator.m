@@ -22,7 +22,7 @@ function varargout = toy_data_generator(varargin)
 
 % Edit the above text to modify the response to help toy_data_generator
 
-% Last Modified by GUIDE v2.5 18-Jul-2013 20:22:46
+% Last Modified by GUIDE v2.5 05-Sep-2013 15:59:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -280,3 +280,67 @@ end
 fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
 line(x, y);
 fclose(file);
+
+
+% --- Executes on button press in readmodel2.
+function readmodel2_Callback(hObject, eventdata, handles)
+% hObject    handle to readmodel2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[filename, path] = uigetfile('*.*', '读取线性模型');
+if isempty(path)
+    return;
+end
+file = fopen([path, filename], 'r');
+if file == -1
+    return;
+end
+w = fscanf(file, '%g');
+fclose(file);
+for i = 1 : 3 : length(w)
+    if w(i) > w(i+1)
+        y = 0 : 1;
+        x = (w(i+2) - w(i+1) .* y) ./ w(i);
+    else
+        x = 0 : 1;
+        y = (w(i+2) - w(i) .* x) ./ w(i+1);
+    end
+    fprintf('hyperplane: %g * x + %g * y = %g\n', w(i), w(i+1), w(i+2));
+    fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
+    line(x, y);
+end
+
+
+% --- Executes on button press in toggle_zoom.
+function toggle_zoom_Callback(hObject, eventdata, handles)
+% hObject    handle to toggle_zoom (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(hObject, 'Value')
+    if get(handles.toggle_pan, 'Value')
+        pan off;
+        set(handles.toggle_pan, 'Value', 0);
+    end
+    zoom on;
+else
+    zoom off;
+end
+% Hint: get(hObject,'Value') returns toggle state of toggle_zoom
+
+
+% --- Executes on button press in toggle_pan.
+function toggle_pan_Callback(hObject, eventdata, handles)
+% hObject    handle to toggle_pan (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(hObject, 'Value')
+    if get(handles.toggle_zoom, 'Value')
+        zoom off;
+        set(handles.toggle_zoom, 'Value', 0);
+    end
+    pan on;
+else
+    pan off;
+end
+    
+% Hint: get(hObject,'Value') returns toggle state of toggle_pan

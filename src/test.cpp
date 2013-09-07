@@ -1,5 +1,6 @@
 # include <iostream>
 # include <fstream>
+# include <iomanip>
 # include <cctype>
 # include <cstring>
 
@@ -14,13 +15,14 @@ using std::cin;
 using std::cout;
 using std::cerr;
 using std::ifstream;
+using std::ofstream;
 using std::flush;
 using std::endl;
-using std::numeric_limits;
+using std::setw;
 
 void read_samples(const char* file_name, x_matrix_t*& x, int*& y);
 
-int verbosity = 1;
+int verbosity = 2;
 
 int main(int argc, char const *argv[])
 {
@@ -35,16 +37,22 @@ int main(int argc, char const *argv[])
 	long d = x->d;
 	cout << "n = " << n << endl;
 	cout << "d = " << d << endl;
-	cout << "X' = \n";
+	cout << "[ Y X' ] = \n";
 	for (long i = 0; i < n; ++i) {
+		cout << y[i] << "\t| ";
 		for (long j = 0; j < d; ++j) {
-			cout << x->data[i * d + j] << "\t";
+			cout << setw(16) << x->data[i * d + j];
 		}
 		cout << endl;
 	}
 
 	jsgd_params_set_default(&param);
-	param.verbose = 2;
+	param.verbose = verbosity;
+	param.n_epoch = 50;
+	param.stop_valid_threshold = 0.001;
+	param.compute_train_accuracy = 1;
+	// param.lambda = 0.1;
+	// param.eval_objective = 1;
 	w = new float[d*3];
 	bias = new float[3];
 	jsgd_train(3, x, y, w, bias, &param);
@@ -52,11 +60,28 @@ int main(int argc, char const *argv[])
 	cout << "[W b] = \n";
 	for (long i = 0; i < 3; ++i) {
 		for (long j = 0; j < d; ++j) {
-			cout << w[i * d + j] << "\t";
+			cout << setw(16) << w[i * d + j];
+			file << setw(16) << w[i * d + j];
 		}
 		cout << "\t" << bias[i] << endl;
+		file << "\t" << bias[i] << "\n";
 	}
+	file.close();
 
+	cout << "Write to file? ";
+	char yes_no;
+	cin >> yes_no;
+	if (yes_no == 'y') {
+		ofstream file("data/model.txt");
+		for (long i = 0; i < 3; ++i) {
+			for (long j = 0; j < d; ++j) {
+				file << setw(16) << w[i * d + j];
+			}
+			file << setw(16) << bias[i] << "\n";
+		}
+		file.close();
+	}
+	cout << "Done" << endl;
 
 	delete[] x->data;
 	delete[] y;
@@ -147,6 +172,7 @@ void read_samples(const char* file_name, x_matrix_t*& x, int*& y) {
 			}
 		}
 		else {
+			--y[i_line];
 			while (file) {
 				ch = file.peek();
 				if (isdigit(ch)) {
