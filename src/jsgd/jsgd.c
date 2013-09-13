@@ -565,7 +565,7 @@ static void learn_epoch_ovr(int nclass,
    * steps). */
 
   int ldybar = params->beta + 1; 
-  int *ybars = NEWA(int, ldybar * n + n);
+  int *ybars = NEWA(int, ldybar * n);
   
   long t, t1 = t0 + n; 
 
@@ -580,7 +580,7 @@ static void learn_epoch_ovr(int nclass,
     seen[0] = yi; 
 
     /* generates values between 0 and nclass - 2 */
-    jrandom_perm(params, nclass - 1, params->beta, seen + 1); 
+    jrandom_perm(params, params->beta, nclass - 1, seen + 1); 
   
    
     /* but yi is already taken, so shift up */

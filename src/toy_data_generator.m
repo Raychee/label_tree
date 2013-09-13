@@ -206,8 +206,8 @@ function readdata_Callback(hObject, eventdata, handles)
 % hObject    handle to readdata (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[filename, path] = uigetfile('*.*', '读取数据文件');
-if isempty(path)
+[filename, path] = uigetfile('*.*', '读取数据文件', '../data');
+if path == 0
     return;
 end
 file = fopen([path, filename], 'r');
@@ -247,8 +247,8 @@ function readmodel_Callback(hObject, eventdata, handles)
 % hObject    handle to readmodel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[filename, path] = uigetfile('*.*', '读取线性模型');
-if isempty(path)
+[filename, path] = uigetfile('*.*', '读取线性模型', '../data');
+if path == 0
     return;
 end
 file = fopen([path, filename], 'r');
@@ -287,8 +287,8 @@ function readmodel2_Callback(hObject, eventdata, handles)
 % hObject    handle to readmodel2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[filename, path] = uigetfile('*.*', '读取线性模型');
-if isempty(path)
+[filename, path] = uigetfile('*.*', '读取线性模型', '../data');
+if path == 0
     return;
 end
 file = fopen([path, filename], 'r');
