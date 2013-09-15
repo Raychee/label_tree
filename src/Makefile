@@ -1,18 +1,19 @@
 include ../Makefile.inc
 
-LIBS = -L../lib -lsvmlight -ljsgd -lopencv_core
-OBJ = main.o label_tree_common.o LabelTree.o
+LIBS   = -L../lib -lsvmlight -ljsgd -lopencv_core
+OBJ    = main.o label_tree_common.o LabelTree.o
 TARGET = main
 
 ifeq ($(OS), LINUX)
 LFLAGS += -Wl,-rpath,'$$ORIGIN/../lib'
 else
-CFLAGS += -mmacosx-version-min=10.5
+CFLAGS += -mmacosx-version-min=10.7
 LFLAGS += -Wl,-rpath,@executable_path/../lib
 endif
 
 ifeq ($(LD), clang)
-LIBS += -lstdc++
+CFLAGS += -stdlib=libc++
+LIBS   += -lc++
 endif
 
 
@@ -39,4 +40,5 @@ svm_light:
 	cd svm_light; make
 
 test:
-	$(CC) $(CFLAGS) $(LFLAGS) $(LIBS) test.cpp -o ../bin/test
+# $(CC) $(CFLAGS) $(LFLAGS) $(LIBS) test.cpp -o ../bin/test
+	$(CC) $(CFLAGS) -lc++ test.cpp SGD_SVM.cpp -o ../bin/test
