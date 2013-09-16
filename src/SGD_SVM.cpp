@@ -8,10 +8,13 @@ SGD_SVM::SGD_SVM(DAT_DIM_T    _d,
                  COMP_T       _eta0_1st_try,
                  COMP_T       _eta0_try_factor,
                  COMP_T       _eta0)
-                :SGD(_verbosity, _eta0, _n_epoch,
-                     _eta0_1st_try, _eta0_try_factor),
-                 d(_d),
-                 lambda(_lambda) {
+        :SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T>(_verbosity,
+                                                 _eta0,
+                                                 _n_epoch,
+                                                 _eta0_1st_try,
+                                                 _eta0_try_factor),
+         d(_d),
+         lambda(_lambda) {
     w = new COMP_T[_d];
 }
 
@@ -80,11 +83,11 @@ inline COMP_T SGD_SVM::compute_loss(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y) {
     return loss < 0 ? 0 : loss;
 }
 
-std::ostream& operator<<(std::ostream& out, SGD_SVM& svm) {
+std::ostream& SGD_SVM::output_stream(std::ostream& out) {
     out << "w = ";
-    for (DAT_DIM_T i = 0; i < svm.d; ++i) {
-        out << std::setw(16) << svm.w[i];
+    for (DAT_DIM_T i = 0; i < d; ++i) {
+        out << std::setw(16) << w[i];
     }
-    out << "\nb = " << std::setw(16) << svm.b;
+    out << "\nb = " << std::setw(16) << b;
     return out;
 }

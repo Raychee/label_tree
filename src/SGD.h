@@ -8,24 +8,24 @@
 # include <forward_list>
 
 
-
 template <typename _COMP_T,
           typename _SUPV_T,
           typename _DAT_DIM_T,
           typename _N_DAT_T>
 class SGD {
-// Stochastic Gradient Descent solver model
+// General Stochastic Gradient Descent solver model
 // _COMP_T:    type of the value to be computed (parameters, data samples, etc)
 // _SUPV_T:    type of the supervising information (classes, labels, etc)
 // _DAT_DIM_T: type of the dimension of the data
 // _N_DAT_T:   type of the number of the data set
 public:
-        SGD(char     _verbosity       = 1,
+    SGD(char         _verbosity       = 1,
         _COMP_T      _eta0            = 0,
         unsigned int _n_epoch         = 5,
         _COMP_T      _eta0_1st_try    = 0.5,
         _COMP_T      _eta0_try_factor = 2);
-    // SGD(const SGD& some);
+    // SGD(const SGD& some);   // No need to explictly declare copy-constructor;
+                               // default is ok
     virtual ~SGD(){};
 
     void train(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y);
@@ -41,11 +41,6 @@ public:
     // parameter is applied with update rule once for each input data sample. 
     // "y" should be the WHOLE supervising data (same length as "dat"), not just
     // length of "n".
-    virtual void train_one(_COMP_T* dat_i, _DAT_DIM_T d, _SUPV_T y) = 0;
-    // update EVERY parameter once with one input data 
-    // (Sub-program of SGD::train_epoch)
-    virtual _SUPV_T test_one(_COMP_T* dat_i, _DAT_DIM_T d) = 0;
-    // test one data sample
     void determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
                         _N_DAT_T* dat_idx = NULL, _N_DAT_T m = 0);
     // Determine the initial learning rate eta0 automatically according to the 
@@ -55,10 +50,28 @@ public:
     static void rand_data_index(_N_DAT_T* index, _N_DAT_T n);
     // generate the array of length n which stores the indexes (0 ~ n-1) of the 
     // data set in random order
+
+    virtual void train_one(_COMP_T* dat_i, _DAT_DIM_T d, _SUPV_T y) = 0;
+    // update EVERY parameter once with one input data 
+    // (Sub-program of SGD::train_epoch)
+    virtual _SUPV_T test_one(_COMP_T* dat_i, _DAT_DIM_T d) const = 0;
+    // test one data sample
     virtual _COMP_T compute_obj(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n,
-                               _SUPV_T* y) = 0;
+                               _SUPV_T* y) const = 0;
     // compute the object function (e.g. sum of empirical losses plus a 
     // regularizing term) given the current parameters and data
+    virtual std::ostream& output_stream(std::ostream& out) const = 0;
+    // output the SGD solver to a standard ostream
+
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& verbose(char);
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& init_learning_rate(_COMP_T);
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& num_of_epoches(unsigned int);
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& try_learning_rate(_COMP_T, _COMP_T);
+    char         verbose() const;
+    _COMP_T      init_learning_rate() const;
+    unsigned int num_of_epoches() const;
+    _COMP_T      learning_rate_try_1st() const;
+    _COMP_T      learning_rate_try_factor() const;
 
 protected:
     _COMP_T  eta0;              // the initial learning rate
@@ -79,6 +92,20 @@ private:
                                 // (if eta0 is not specified by user)
     _COMP_T eta0_try_factor;    // the factor that eta0 multiplies for each try
 };
+
+// a wrapper of function output_stream(), operator << overload for convenience
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline std::ostream& operator<<(std::ostream& out,
+                                SGD<_COMP_T,
+                                    _SUPV_T,
+                                    _DAT_DIM_T,
+                                    _N_DAT_T>& sgd) {
+    return sgd.output_stream(out);
+}
+
 
 template <typename _COMP_T,
           typename _SUPV_T,
@@ -295,6 +322,86 @@ determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
 
     if (alloc_dat_idx) delete[] dat_idx;
 }
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+verbose(char _verbosity) {
+    verbosity = _verbosity;
+    return *this;
+}
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+init_learning_rate(_COMP_T _eta0) {
+    eta0 = _eta0;
+    return *this;
+}
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+num_of_epoches(unsigned int _n_epoch) {
+    n_epoch = _n_epoch;
+    return *this;
+}
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+try_learning_rate(_COMP_T _eta0_1st_try, _COMP_T _eta0_try_factor) {
+    eta0_1st_try    = _eta0_1st_try;
+    eta0_try_factor = _eta0_try_factor;
+    return *this;
+}
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline char SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+verbose() const { return verbosity; }
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline _COMP_T SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+init_learning_rate() const { return eta0; }
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline unsigned int SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+num_of_epoches() const { return n_epoch; }
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline _COMP_T SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+learning_rate_try_1st() const { return eta0_1st_try; }
+
+template <typename _COMP_T,
+          typename _SUPV_T,
+          typename _DAT_DIM_T,
+          typename _N_DAT_T>
+inline _COMP_T SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+learning_rate_try_factor() const { return eta0_try_factor; }
 
 
 

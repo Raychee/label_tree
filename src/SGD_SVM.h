@@ -37,8 +37,7 @@ public:
     virtual void train_one(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y);
     virtual SUPV_T test_one(COMP_T* dat_i, DAT_DIM_T d);
     virtual COMP_T compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n, SUPV_T* y);
-
-    friend std::ostream& operator<<(std::ostream& out, SGD_SVM& svm);
+    virtual std::ostream& output_stream(std::ostream& out);
 
 private:
     COMP_T*   w;        // weight vector of the linear svm classifier
