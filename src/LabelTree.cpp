@@ -5,7 +5,7 @@
 # include "LabelTree.h"
 
 
-/******** LabelTreeNode functions ********/
+/*******************  LabelTree::LabelTreeNode definitions  *******************/
 /**** Constructor ****/
 LabelTree::
 LabelTreeNode::LabelTreeNode(DAT_DIM_T _d, unsigned int _nary)
@@ -117,7 +117,55 @@ LabelTreeNode::attach_children(LabelTreeNode** _child,
 }
 
 
-/******** LabelTree functions ********/
+/*********************  LabelTree::iterator definitions  **********************/
+LabelTree::iterator::iterator(LabelTreeNode* node)
+		  :pointer(node) {
+	if (!pointer) return;
+	breadth_first_traverse.push(pointer);
+	unsigned int n_child = pointer->num_of_children();
+	if (n_child) {
+		LabelTreeNode** child = pointer->children();
+		for (unsigned int i = 0; i < n_child; ++i) {
+			breadth_first_traverse.push(child[i]);
+		}
+	}
+}
+
+LabelTree::iterator& LabelTree::iterator::operator++() {
+	breadth_first_traverse.pop();
+	if (breadth_first_traverse.empty()) pointer = NULL;
+	else {
+		pointer = breadth_first_traverse.front();
+		unsigned int n_child = pointer->num_of_children();
+		if (n_child) {
+			LabelTreeNode** child = pointer->children();
+			for (unsigned int i = 0; i < n_child; ++i) {
+				breadth_first_traverse.push(child[i]);
+			}
+		}
+	}
+	return *this;
+}
+
+LabelTree::iterator LabelTree::iterator::operator++(int) {
+	iterator temp(*this);
+	breadth_first_traverse.pop();
+	if (breadth_first_traverse.empty()) pointer = NULL;
+	else {
+		pointer = breadth_first_traverse.front();
+		unsigned int n_child = pointer->num_of_children();
+		if (n_child) {
+			LabelTreeNode** child = pointer->children();
+			for (unsigned int i = 0; i < n_child; ++i) {
+				breadth_first_traverse.push(child[i]);
+			}
+		}
+	}
+	return temp;
+}
+
+
+/**************************  LabelTree definitions  ***************************/
 /**** Constructor ****/
 LabelTree::LabelTree(DAT_DIM_T 	  _d,
 			  		 SUPV_T       _s_labelset,

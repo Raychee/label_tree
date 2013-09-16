@@ -1,6 +1,7 @@
 # ifndef _LABELTREE_H
 # define _LABELTREE_H
 
+# include <queue>
 # include "SGD.h"
 
 
@@ -18,8 +19,6 @@ class LabelTree : public SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T> {
 // Label Tree with an SGD optimizer for joint convex optimization
 
 public:
-	class LabelTreeNode;
-
 	LabelTree(DAT_DIM_T 	 _d,
 			  SUPV_T 		 _s_labelset,
 			  unsigned int   _nary        	  = 2,
@@ -30,14 +29,38 @@ public:
         	  COMP_T         _eta0_try_factor = 2);
 	LabelTree(LabelTree& tree);
 	~LabelTree();
-	
-	LabelTreeNode* root() const { return root_; }
 
 	virtual void   train_one(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y);
 	virtual SUPV_T test_one(COMP_T* dat_i, DAT_DIM_T d) const;
 	virtual COMP_T compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n,
                                SUPV_T* y) const;
 	virtual std::ostream& output_stream(std::ostream& out) const;
+
+	class LabelTreeNode;
+	LabelTreeNode* root() const { return root_; }
+
+	class iterator {
+	public:
+		iterator(LabelTreeNode* node);
+		~iterator() {};
+		iterator&      operator++();
+		iterator       operator++(int);
+		LabelTreeNode* operator*() const{
+			return pointer;
+		}
+		bool           operator==(iterator& rho) const{
+			return pointer == rho.pointer;
+		}
+		bool           operator!=(iterator& rho) const{
+			return pointer != rho.pointer;
+		}
+	private:
+		LabelTreeNode* pointer;
+		std::queue<LabelTreeNode*> breadth_first_traverse;
+	};
+	iterator begin() const { return iterator(root_); }
+	iterator end() const { return iterator(NULL); }
+
 private:
 	COMP_T         lambda;		// regularizing term's coefficient
 	LabelTreeNode* root_;		// root of the tree
@@ -92,5 +115,6 @@ private:
 	LabelTreeNode** child;			// list of children
 	LabelTreeNode*  parent_;		// pointer to the parent
 };
+
 
 # endif
