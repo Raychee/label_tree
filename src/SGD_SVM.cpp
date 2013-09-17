@@ -31,7 +31,9 @@ SGD_SVM::~SGD_SVM() {
     delete[] w;
 }
 
-void SGD_SVM::train_one(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y) {
+SGD_SVM& SGD_SVM::train_one(COMP_T* dat, N_DAT_T i,
+                            DAT_DIM_T d, N_DAT_T n, SUPV_T y) {
+    COMP_T* dat_i = dat + d * i;
     COMP_T loss = compute_loss(dat_i, d, y);
     if (loss > 0) {
         for (DAT_DIM_T i = 0; i < d; ++i) {     // update w
@@ -83,11 +85,11 @@ inline COMP_T SGD_SVM::compute_loss(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y) {
     return loss < 0 ? 0 : loss;
 }
 
-std::ostream& SGD_SVM::output_stream(std::ostream& out) {
+SGD_SVM& SGD_SVM::output_stream(std::ostream& out) {
     out << "w = ";
     for (DAT_DIM_T i = 0; i < d; ++i) {
         out << std::setw(16) << w[i];
     }
     out << "\nb = " << std::setw(16) << b;
-    return out;
+    return *this;
 }

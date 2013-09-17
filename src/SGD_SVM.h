@@ -5,17 +5,19 @@
 # include <fstream>
 # include "SGD.h"
 
-typedef double COMP_T;
+typedef double        COMP_T;
 // type of the value to be computed (parameters, training samples, etc)
-typedef int SUPV_T;
+typedef int           SUPV_T;
 // type of the supervising information (classes, labels, etc)
 typedef unsigned long N_DAT_T;
 // type of the number of the data set
-typedef unsigned int DAT_DIM_T;
+typedef unsigned int  DAT_DIM_T;
 // type of the dimension of the data
 
 class SGD_SVM : public SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T> {
 // 2-class linear SVM
+// n samples, d dimensions
+// parameters: w, b, lambda
 // obj    = 0.5 * lambda * w' * w + sum(i=1:n)(loss_i)
 // loss_i = max{0, 1 - y_i * (w' * x_i + b)}
 // upate rules:
@@ -34,10 +36,11 @@ public:
     SGD_SVM(SGD_SVM& some);
     ~SGD_SVM();
 
-    virtual void train_one(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y);
-    virtual SUPV_T test_one(COMP_T* dat_i, DAT_DIM_T d);
-    virtual COMP_T compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n, SUPV_T* y);
-    virtual std::ostream& output_stream(std::ostream& out);
+    virtual SGD_SVM& train_one(COMP_T* dat, N_DAT_T i,
+                               DAT_DIM_T d, N_DAT_T n, SUPV_T y);
+    virtual SUPV_T   test_one(COMP_T* dat_i, DAT_DIM_T d);
+    virtual COMP_T   compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n, SUPV_T*y);
+    virtual SGD_SVM& output_stream(std::ostream& out);
 
 private:
     COMP_T*   w;        // weight vector of the linear svm classifier

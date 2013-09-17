@@ -24,25 +24,28 @@ public:
         unsigned int _n_epoch         = 5,
         _COMP_T      _eta0_1st_try    = 0.5,
         _COMP_T      _eta0_try_factor = 2);
-    // SGD(const SGD& some);   // No need to explictly declare copy-constructor;
+    // SGD(const SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& some);   // No need to explictly declare copy-constructor;
                                // default is ok
     virtual ~SGD(){};
 
-    void train(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y);
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    train(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y);
     // Train the parameters "param" with ALL the "n" input data of dimension "d"
     // and the corresponding supervising data. The order of the data samples are
     // automatically shuffled before each epoch. Every parameter is applied with
     // update rule once for each input data sample.
-    void train_epoch(_COMP_T* dat, _DAT_DIM_T d,
-                     _N_DAT_T* dat_idx, _N_DAT_T n, _SUPV_T* y);
-    // Train the parameters "param" with "n" data samples in "dat" whose indexes
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    train_epoch(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n,
+                _N_DAT_T* dat_idx, _N_DAT_T m, _SUPV_T* y);
+    // Train the parameters "param" with "m" data samples in "dat" whose indexes
     // are specified by "dat_idx". The training precedure follows exactly the 
     // order of indexes in "dat_idx". The data pass only once (1-epoch). Every 
     // parameter is applied with update rule once for each input data sample. 
-    // "y" should be the WHOLE supervising data (same length as "dat"), not just
-    // length of "n".
-    void determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
-                        _N_DAT_T* dat_idx = NULL, _N_DAT_T m = 0);
+    // "y" should be the WHOLE supervising data ("n", same length as "dat"), not
+    // just length of "m".
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
+                   _N_DAT_T* dat_idx = NULL, _N_DAT_T m = 0);
     // Determine the initial learning rate eta0 automatically according to the 
     // given data set. You can specify a part of the data set using an index 
     // array "dat_idx" of length "m" to improve efficiency. Once index array is
@@ -51,27 +54,38 @@ public:
     // generate the array of length n which stores the indexes (0 ~ n-1) of the 
     // data set in random order
 
-    virtual void train_one(_COMP_T* dat_i, _DAT_DIM_T d, _SUPV_T y) = 0;
+    virtual SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    train_one(_COMP_T* dat, _N_DAT_T i,
+              _DAT_DIM_T d, _N_DAT_T n, _SUPV_T y) = 0;
     // update EVERY parameter once with one input data 
     // (Sub-program of SGD::train_epoch)
     virtual _SUPV_T test_one(_COMP_T* dat_i, _DAT_DIM_T d) const = 0;
     // test one data sample
     virtual _COMP_T compute_obj(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n,
-                               _SUPV_T* y) const = 0;
+                                _SUPV_T* y) const = 0;
     // compute the object function (e.g. sum of empirical losses plus a 
     // regularizing term) given the current parameters and data
-    virtual std::ostream& output_stream(std::ostream& out) const = 0;
+    virtual SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    output_stream(std::ostream& out) = 0;
     // output the SGD solver to a standard ostream
 
-    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& verbose(char);
-    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& init_learning_rate(_COMP_T);
-    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& num_of_epoches(unsigned int);
-    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& try_learning_rate(_COMP_T, _COMP_T);
-    char         verbose() const;
-    _COMP_T      init_learning_rate() const;
-    unsigned int num_of_epoches() const;
-    _COMP_T      learning_rate_try_1st() const;
-    _COMP_T      learning_rate_try_factor() const;
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    verbose(char _verbosity) { verbosity = _verbosity; return *this; }
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    init_learning_rate(_COMP_T _eta0) { eta0 = _eta0; return *this; }
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    num_of_epoches(unsigned int _n_epoch) { n_epoch = _n_epoch; return *this; }
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    try_learning_rate(_COMP_T _eta0_1st_try, _COMP_T _eta0_try_factor) {
+        eta0_1st_try    = _eta0_1st_try;
+        eta0_try_factor = _eta0_try_factor;
+        return *this;
+    }
+    char         verbose()                  const { return verbosity; }
+    _COMP_T      init_learning_rate()       const { return eta0; }
+    unsigned int num_of_epoches()           const { return n_epoch; }
+    _COMP_T      learning_rate_try_1st()    const { return eta0_1st_try; }
+    _COMP_T      learning_rate_try_factor() const { return eta0_try_factor; }
 
 protected:
     _COMP_T  eta0;              // the initial learning rate
@@ -103,7 +117,8 @@ inline std::ostream& operator<<(std::ostream& out,
                                     _SUPV_T,
                                     _DAT_DIM_T,
                                     _N_DAT_T>& sgd) {
-    return sgd.output_stream(out);
+    sgd.output_stream(out);
+    return out;
 }
 
 
@@ -127,7 +142,7 @@ SGD(char         _verbosity,
 }
 
 // Copy-constructor of SGD is equivalent to the default
-// SGD::SGD(const SGD& some):
+// SGD::SGD(const SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& some):
 //          verbosity(some.verbosity),
 //          eta0(some.eta0),
 //          n_epoch(some.n_epoch),
@@ -142,7 +157,8 @@ template <typename _COMP_T,
           typename _SUPV_T,
           typename _DAT_DIM_T,
           typename _N_DAT_T>
-void SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
 train(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y) {
     _N_DAT_T* rand_dat_idx = new _N_DAT_T[n];   // buffer for random indexes
     if (verbosity >= 1) {
@@ -164,7 +180,7 @@ train(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y) {
                 else std::cout.flush();
             }
         }
-        train_epoch(dat, d, rand_dat_idx, n, y);
+        train_epoch(dat, d, n, rand_dat_idx, n, y);
         if (verbosity == 1) {
             std::cout << "Done." << std::endl;
         }
@@ -173,27 +189,30 @@ train(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y) {
         std::cout << "SGD Training: finished." << std::endl;
     }
     delete[] rand_dat_idx;
+    return *this;
 }
 
 template <typename _COMP_T,
           typename _SUPV_T,
           typename _DAT_DIM_T,
           typename _N_DAT_T>
-void SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-train_epoch(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T* dat_idx, _N_DAT_T n, _SUPV_T* y) {
-    for (_N_DAT_T i = 0; i < n; ++i, ++t) {
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+train_epoch(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n,
+            _N_DAT_T* dat_idx, _N_DAT_T m, _SUPV_T* y) {
+    for (_N_DAT_T i = 0; i < m; ++i, ++t) {
         _N_DAT_T ind = dat_idx[i];
         if (verbosity >= 2) {
             std::cout << "\tSGD training through sample " << ind
-                      << " (" << i+1 << "/" << n << ")... " << std::flush;
+                      << " (" << i+1 << "/" << m << ")... " << std::flush;
         }
-        _COMP_T* dat_i = dat + d * ind;
         eta = compute_learning_rate();
-        train_one(dat_i, d, y[ind]);
+        train_one(dat, ind, d, n, y[ind]);
         if (verbosity >= 2) {
             std::cout << "Done." << std::endl;
         }
     }
+    return *this;
 }
 
 template <typename _COMP_T,
@@ -228,7 +247,8 @@ template <typename _COMP_T,
           typename _SUPV_T,
           typename _DAT_DIM_T,
           typename _N_DAT_T>
-void SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
 determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
                _N_DAT_T* dat_idx, _N_DAT_T m) {
     _COMP_T eta0_try1, eta0_try2, obj_try1, obj_try2;
@@ -322,88 +342,6 @@ determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
 
     if (alloc_dat_idx) delete[] dat_idx;
 }
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
-SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-verbose(char _verbosity) {
-    verbosity = _verbosity;
-    return *this;
-}
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
-SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-init_learning_rate(_COMP_T _eta0) {
-    eta0 = _eta0;
-    return *this;
-}
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
-SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-num_of_epoches(unsigned int _n_epoch) {
-    n_epoch = _n_epoch;
-    return *this;
-}
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
-SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-try_learning_rate(_COMP_T _eta0_1st_try, _COMP_T _eta0_try_factor) {
-    eta0_1st_try    = _eta0_1st_try;
-    eta0_try_factor = _eta0_try_factor;
-    return *this;
-}
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline char SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-verbose() const { return verbosity; }
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline _COMP_T SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-init_learning_rate() const { return eta0; }
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline unsigned int SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-num_of_epoches() const { return n_epoch; }
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline _COMP_T SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-learning_rate_try_1st() const { return eta0_1st_try; }
-
-template <typename _COMP_T,
-          typename _SUPV_T,
-          typename _DAT_DIM_T,
-          typename _N_DAT_T>
-inline _COMP_T SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-learning_rate_try_factor() const { return eta0_try_factor; }
-
-
 
 
 # endif
