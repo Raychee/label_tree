@@ -22,7 +22,7 @@ function varargout = toy_data_generator(varargin)
 
 % Edit the above text to modify the response to help toy_data_generator
 
-% Last Modified by GUIDE v2.5 05-Sep-2013 15:59:24
+% Last Modified by GUIDE v2.5 22-Sep-2013 22:57:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,6 +78,19 @@ function cordinate_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to cordinate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+h_line = get(handles.read_model_tree, 'UserData');
+if ~isempty(h_line)
+    h_visible = get(h_line, 'Visible');
+    ind = find(strcmpi('off', h_visible), 1);
+    if ~isempty(ind)
+        set(h_line(ind), 'Visible', 'On');
+        x = get(h_line(ind), 'XData');
+        y = get(h_line(ind), 'YData');
+        fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
+    end
+    return;
+end
+
 labelrgb = get(hObject, 'UserData');
 if isempty(labelrgb) || isempty(labelrgb{1})
     return;
@@ -142,7 +155,7 @@ function savedata_Callback(hObject, eventdata, handles)
 % hObject    handle to savedata (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[filename, path] = uiputfile('data.txt', '生成数据文件');
+[filename, path] = uiputfile('../data.txt', '生成数据文件');
 dots = findobj(handles.cordinate, 'Type', 'line');
 if isempty(dots) || isempty(filename)
     return;
@@ -199,6 +212,8 @@ function cleardata_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 dots = findobj(handles.cordinate, 'Type', 'line');
 delete(dots);
+set(handles.cordinate, 'XLimMode', 'manual', 'YLimMode', 'manual', ...
+    'XLim', [0 1], 'YLim', [0 1]);
 
 
 % --- Executes on button press in readdata.
@@ -242,9 +257,9 @@ end
 fclose(file);
 
 
-% --- Executes on button press in readmodel.
-function readmodel_Callback(hObject, eventdata, handles)
-% hObject    handle to readmodel (see GCBO)
+% --- Executes on button press in read_model_svm_light.
+function read_model_svm_light_Callback(hObject, eventdata, handles)
+% hObject    handle to read_model_svm_light (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [filename, path] = uigetfile('*.*', '读取线性模型', '../data');
@@ -278,13 +293,14 @@ else
     y = (b - w(1) .* x) ./ w(2);
 end
 fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
+set(handles.cordinate, 'XLimMode', 'auto', 'YLimMode', 'auto');
 line(x, y);
 fclose(file);
 
 
-% --- Executes on button press in readmodel2.
-function readmodel2_Callback(hObject, eventdata, handles)
-% hObject    handle to readmodel2 (see GCBO)
+% --- Executes on button press in read_model.
+function read_model_Callback(hObject, eventdata, handles)
+% hObject    handle to read_model (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [filename, path] = uigetfile('*.*', '读取线性模型', '../data');
@@ -295,20 +311,29 @@ file = fopen([path, filename], 'r');
 if file == -1
     return;
 end
-w = fscanf(file, '%g');
-fclose(file);
-for i = 1 : 3 : length(w)
-    if w(i) > w(i+1)
-        y = 0 : 1;
-        x = (w(i+2) - w(i+1) .* y) ./ w(i);
-    else
-        x = 0 : 1;
-        y = (w(i+2) - w(i) .* x) ./ w(i+1);
+set(handles.cordinate, 'XLimMode', 'auto', 'YLimMode', 'auto');
+while ~feof(file)
+    line_str = fgetl(file);
+    if ischar(line_str)
+        w = sscanf(line_str, 'w =         %g %g', 2);
+        if isempty(w)
+            continue;
+        end
+        line_str = fgetl(file);
+        b = sscanf(line_str, 'b =         %g', 1);
+        fprintf('hyperplane: %g * x + %g * y + %g = 0\n', w(1), w(2), b);
+        if w(1) > w(2)
+            y = 0 : 1;
+            x = ( - b - w(2) .* y) ./ w(1);
+        else
+            x = 0 : 1;
+            y = ( - b - w(1) .* x) ./ w(2);
+        end
+        fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
+        line(x, y);
     end
-    fprintf('hyperplane: %g * x + %g * y = %g\n', w(i), w(i+1), w(i+2));
-    fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
-    line(x, y);
 end
+fclose(file);
 
 
 % --- Executes on button press in toggle_zoom.
@@ -344,3 +369,72 @@ else
 end
     
 % Hint: get(hObject,'Value') returns toggle state of toggle_pan
+
+
+% --- Executes on button press in read_model_tree.
+function read_model_tree_Callback(hObject, eventdata, handles)
+% hObject    handle to read_model_tree (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[filename, path] = uigetfile('*.*', '读取线性模型', '../data');
+if path == 0
+    return;
+end
+file = fopen([path, filename], 'r');
+if file == -1
+    return;
+end
+num_of_nodes = 0;
+while ~feof(file)
+    line_str = fgetl(file);
+    if ischar(line_str)
+        if ~isempty(strfind(line_str, 'LabelTreeNode'))
+            num_of_nodes = num_of_nodes + 1;
+        end
+    end
+end
+set(handles.cordinate, 'XLimMode', 'auto', 'YLimMode', 'auto');
+h_line = zeros(num_of_nodes - 1, 1);
+num_of_nodes = 0;
+frewind(file)
+while ~feof(file)
+    line_str = fgetl(file);
+    if ischar(line_str)
+        w = sscanf(line_str, '    w        = %g %g', 2);
+        if isempty(w)
+            continue;    
+        end
+        line_str = fgetl(file);
+        b = sscanf(line_str, '    b        = %g', 1);
+        if num_of_nodes == 0
+            num_of_nodes = num_of_nodes + 1;
+            continue;
+        end
+        fprintf('hyperplane: %g * x + %g * y + %g = 0\n', w(1), w(2), b);
+        if w(1) > w(2)
+            y = 0 : 1;
+            x = ( - b - w(2) .* y) ./ w(1);
+        else
+            x = 0 : 1;
+            y = ( - b - w(1) .* x) ./ w(2);
+        end
+        fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
+        h_line(num_of_nodes) = ...
+            line('XData', x, 'YData', y, 'Visible', 'off');
+        num_of_nodes = num_of_nodes + 1;
+    end
+end
+fclose(file);
+set(hObject, 'UserData', h_line);
+
+
+% --- Executes on mouse motion over figure - except title and menu.
+function visualizer_WindowButtonMotionFcn(hObject, eventdata, handles)
+% hObject    handle to visualizer (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+cp = get(handles.cordinate, 'CurrentPoint');
+x = cp(1, 1); y = cp(1, 2);
+
+str = sprintf('坐标：[%.3f, %.3f]', x, y);
+set(handles.show_cordinate, 'String', str);

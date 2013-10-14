@@ -13,9 +13,11 @@ SGD_SVM::SGD_SVM(DAT_DIM_T    _d,
                                                  _n_epoch,
                                                  _eta0_1st_try,
                                                  _eta0_try_factor),
+         b(0),
          d(_d),
          lambda(_lambda) {
     w = new COMP_T[_d];
+    std::memset(w, 0, sizeof(COMP_T) * _d);
 }
 
 SGD_SVM::SGD_SVM(SGD_SVM& some)
@@ -48,9 +50,10 @@ SGD_SVM& SGD_SVM::train_one(COMP_T* dat, N_DAT_T i,
             // w = (1 - lambda * eta) * w
         }                                       // update b: do nothing
     }
+    return *this;
 }
 
-inline SUPV_T SGD_SVM::test_one(COMP_T* dat_i, DAT_DIM_T d) {
+inline SUPV_T SGD_SVM::test_one(COMP_T* dat_i, DAT_DIM_T d) const {
     COMP_T score = compute_margin(dat_i, d);
     return score > 0 ? 1 : -1;
 }
@@ -70,7 +73,7 @@ COMP_T SGD_SVM::compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n, SUPV_T* y) {
     return reg + loss;
 }
 
-COMP_T SGD_SVM::compute_margin(COMP_T* dat_i, DAT_DIM_T d) {
+COMP_T SGD_SVM::compute_margin(COMP_T* dat_i, DAT_DIM_T d) const {
     COMP_T marg = 0;
     for (DAT_DIM_T i = 0; i < d; ++i) {     // w' * x_i
         marg += dat_i[i] * w[i];
@@ -79,17 +82,25 @@ COMP_T SGD_SVM::compute_margin(COMP_T* dat_i, DAT_DIM_T d) {
     return marg;
 }
 
-inline COMP_T SGD_SVM::compute_loss(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y) {
+inline COMP_T SGD_SVM::compute_loss(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y) const {
     COMP_T loss = 1 - y * (compute_margin(dat_i, d));
     // 1 - y_i * (w' * x_i + b)
     return loss < 0 ? 0 : loss;
 }
 
-SGD_SVM& SGD_SVM::output_stream(std::ostream& out) {
+SGD_SVM& SGD_SVM::ostream_this(std::ostream& out) {
     out << "w = ";
     for (DAT_DIM_T i = 0; i < d; ++i) {
         out << std::setw(16) << w[i];
     }
     out << "\nb = " << std::setw(16) << b;
+    return *this;
+}
+
+SGD_SVM& SGD_SVM::ostream_param(std::ostream& out) {
+    for (DAT_DIM_T i = 0; i < d; ++i) {
+        out << w[i] << " ";
+    }
+    out << b;
     return *this;
 }

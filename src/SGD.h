@@ -19,13 +19,15 @@ class SGD {
 // _DAT_DIM_T: type of the dimension of the data
 // _N_DAT_T:   type of the number of the data set
 public:
-    SGD(char         _verbosity       = 1,
-        _COMP_T      _eta0            = 0,
-        unsigned int _n_epoch         = 5,
-        _COMP_T      _eta0_1st_try    = 0.5,
-        _COMP_T      _eta0_try_factor = 2);
-    // SGD(const SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& some);   // No need to explictly declare copy-constructor;
-                               // default is ok
+    SGD(char         _verbosity           = 1,
+        _COMP_T      _eta0                = 0,
+        unsigned int _n_epoch             = 5,
+        _COMP_T      _eta0_1st_try        = 0.5,
+        _COMP_T      _eta0_try_factor     = 2,
+        bool         _comp_obj_each_epoch = false);
+    // SGD(const SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& some);
+                            // No need to explictly declare copy-constructor;
+                            // default is ok
     virtual ~SGD(){};
 
     SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
@@ -50,10 +52,9 @@ public:
     // given data set. You can specify a part of the data set using an index 
     // array "dat_idx" of length "m" to improve efficiency. Once index array is
     // provided, it should be shuffled before it is passed as the argument.
-    static void rand_data_index(_N_DAT_T* index, _N_DAT_T n);
+    virtual void rand_data_index(_N_DAT_T* index, _SUPV_T* y, _N_DAT_T n);
     // generate the array of length n which stores the indexes (0 ~ n-1) of the 
     // data set in random order
-
     virtual SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
     train_one(_COMP_T* dat, _N_DAT_T i,
               _DAT_DIM_T d, _N_DAT_T n, _SUPV_T y) = 0;
@@ -62,13 +63,17 @@ public:
     virtual _SUPV_T test_one(_COMP_T* dat_i, _DAT_DIM_T d) const = 0;
     // test one data sample
     virtual _COMP_T compute_obj(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n,
-                                _SUPV_T* y) const = 0;
+                                _SUPV_T* y) = 0;
     // compute the object function (e.g. sum of empirical losses plus a 
     // regularizing term) given the current parameters and data
     virtual SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
-    output_stream(std::ostream& out) = 0;
+    ostream_this(std::ostream& out) = 0;
     // output the SGD solver to a standard ostream
+    virtual SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    ostream_param(std::ostream& out) = 0;
+    // output all the training parameters to a standard ostream
 
+    // some interfaces to write private variables in this class
     SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
     verbose(char _verbosity) { verbosity = _verbosity; return *this; }
     SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
@@ -81,11 +86,24 @@ public:
         eta0_try_factor = _eta0_try_factor;
         return *this;
     }
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    compute_obj_each_epoch(bool _compute_obj) {
+        comp_obj_each_epoch = _compute_obj;
+        return *this;
+    }
+    SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>& 
+    ostream_of_training_process(std::ostream& _out_training_proc) {
+        out_training_proc = &_out_training_proc;
+        return *this;
+    }
+
+    // some interfaces to read private variables in this class
     char         verbose()                  const { return verbosity; }
     _COMP_T      init_learning_rate()       const { return eta0; }
     unsigned int num_of_epoches()           const { return n_epoch; }
     _COMP_T      learning_rate_try_1st()    const { return eta0_1st_try; }
     _COMP_T      learning_rate_try_factor() const { return eta0_try_factor; }
+    bool         compute_obj_each_epoch()   const { return comp_obj_each_epoch;}
 
 protected:
     _COMP_T  eta0;              // the initial learning rate
@@ -98,16 +116,28 @@ protected:
     // Create and return a temporary duplicate of the current SGD solver. Used 
     // in determin_eta0().
     virtual _COMP_T compute_learning_rate() = 0;
+
 private:
     char         verbosity;
     unsigned int n_epoch;       // number of epoches
-    
+
+    bool         comp_obj_each_epoch;
+    // whether to compute the objective value after each epoch
+    bool         balanced_rand;
+    // whether to generate a label-balanced semi-random index array
+
     _COMP_T eta0_1st_try;       // the first guess of eta0
                                 // (if eta0 is not specified by user)
     _COMP_T eta0_try_factor;    // the factor that eta0 multiplies for each try
+
+
+    // DEBUG variables
+    std::ostream* out_training_proc;
+    // pointer to the ostream which is used for the output of parameters. 
+    // If NULL, then nothing will be output
 };
 
-// a wrapper of function output_stream(), operator << overload for convenience
+// a wrapper of function ostream_this(), operator << overload for convenience
 template <typename _COMP_T,
           typename _SUPV_T,
           typename _DAT_DIM_T,
@@ -117,7 +147,7 @@ inline std::ostream& operator<<(std::ostream& out,
                                     _SUPV_T,
                                     _DAT_DIM_T,
                                     _N_DAT_T>& sgd) {
-    sgd.output_stream(out);
+    sgd.ostream_this(out);
     return out;
 }
 
@@ -131,13 +161,16 @@ SGD(char         _verbosity,
     _COMP_T      _eta0,
     unsigned int _n_epoch,
     _COMP_T      _eta0_1st_try,
-    _COMP_T      _eta0_try_factor)
+    _COMP_T      _eta0_try_factor,
+    bool         _comp_obj_each_epoch)
    :eta0(_eta0),
     t(0),
     verbosity(_verbosity),
     n_epoch(_n_epoch),
+    comp_obj_each_epoch(_comp_obj_each_epoch),
     eta0_1st_try(_eta0_1st_try),
-    eta0_try_factor(_eta0_try_factor) {
+    eta0_try_factor(_eta0_try_factor),
+    out_training_proc(NULL) {
     std::srand(std::time(NULL));
 }
 
@@ -169,20 +202,27 @@ train(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y) {
     if (!eta0) determine_eta0(dat, d, n, y);
     while (t < n_epoch * n) {
         if (!(t % n)) {                       // during the start of each epoch, 
-            if (verbosity >= 1) {
+            if (verbosity >= 2) {
                 std::cout << "Shuffling the data set... " << std::flush;
             }
-            rand_data_index(rand_dat_idx, n); // re-shuffle the data
+            // re-shuffle the data
+            rand_data_index(rand_dat_idx, y, n);
+            if (verbosity >= 2) {
+                std::cout << "Done." << std::endl; 
+            }
             if (verbosity >= 1) {
-                std::cout << "Done.\nTraining: Epoch = "
-                          << t / n + 1  << " ... ";
-                if (verbosity >= 2) std::cout << std::endl;
+                std::cout << "Training: Epoch = " << t / n + 1  << " ... ";
+                if (verbosity >= 3) std::cout << std::endl;
                 else std::cout.flush();
             }
         }
         train_epoch(dat, d, n, rand_dat_idx, n, y);
-        if (verbosity == 1) {
-            std::cout << "Done." << std::endl;
+        if (verbosity >= 1 && verbosity < 3) {
+            std::cout << "Done.";
+            if (comp_obj_each_epoch) {
+                std::cout << " Objective = " << compute_obj(dat, d, n, y);
+            }
+            std::cout << std::endl;
         }
     }
     if (verbosity >= 1) {
@@ -202,14 +242,20 @@ train_epoch(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n,
             _N_DAT_T* dat_idx, _N_DAT_T m, _SUPV_T* y) {
     for (_N_DAT_T i = 0; i < m; ++i, ++t) {
         _N_DAT_T ind = dat_idx[i];
-        if (verbosity >= 2) {
+        if (verbosity >= 3) {
             std::cout << "\tSGD training through sample " << ind
                       << " (" << i+1 << "/" << m << ")... " << std::flush;
         }
         eta = compute_learning_rate();
         train_one(dat, ind, d, n, y[ind]);
-        if (verbosity >= 2) {
+        if (verbosity >= 3) {
             std::cout << "Done." << std::endl;
+        }
+
+        // DEBUG
+        if (out_training_proc) {
+            ostream_param(*out_training_proc);
+            *out_training_proc << " " << compute_obj(dat, d, n, y) << "\n";
         }
     }
     return *this;
@@ -220,26 +266,26 @@ template <typename _COMP_T,
           typename _DAT_DIM_T,
           typename _N_DAT_T>
 void SGD<_COMP_T, _SUPV_T, _DAT_DIM_T, _N_DAT_T>::
-rand_data_index(_N_DAT_T* index, _N_DAT_T n) {
+rand_data_index(_N_DAT_T* index, _SUPV_T* y, _N_DAT_T n) {
 // WARNING: current implementation can generate random integers only less than 
 // maximum value of type "int" because of the restrictions of rand() from C 
 // standard library.
-    std::forward_list<_N_DAT_T> candicate;
+    std::forward_list<_N_DAT_T> candidate;
     for (_N_DAT_T i = 0; i < n; ++i) {
-        candicate.push_front(i);
+        candidate.push_front(i);
     }
     for (_N_DAT_T i = 0; i < n; ++i) {
         _N_DAT_T rand_i = std::rand() % ( n - i );
         typename std::forward_list<_N_DAT_T>::iterator it0 = 
-            candicate.before_begin();
+            candidate.before_begin();
         typename std::forward_list<_N_DAT_T>::iterator it1 = 
-            candicate.begin();
+            candidate.begin();
         for (_N_DAT_T i = 0; i < rand_i; ++i) {
             ++it0;
             ++it1;
         }
         index[i] = *it1;
-        candicate.erase_after(it0);
+        candidate.erase_after(it0);
     }
 }
 
@@ -268,7 +314,7 @@ determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
         dat_idx = new _N_DAT_T[n];
         m = n;
         alloc_dat_idx = true;
-        rand_data_index(dat_idx, m);
+        rand_data_index(dat_idx, y, n);
         if (verbosity >= 2) {
             std::cout << "Done." << std::endl;
         }
@@ -287,7 +333,7 @@ determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
             std::cout << "\t\tSGD training through sample " << ind
                       << " (" << i+1 << "/" << m << ")... " << std::flush;
         }
-        tempSGD->train_one(dat + d * ind, d, y[ind]);
+        tempSGD->train_one(dat, ind, d, n, y[ind]);
         if (verbosity >= 3) {
             std::cout << "Done." << std::endl;
         }
@@ -317,7 +363,7 @@ determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
                 std::cout << "\t\tSGD training through sample " << ind
                           << " (" << i+1 << "/" << m << ")... " << std::flush;
             }
-            tempSGD->train_one(dat + d * ind, d, y[ind]);
+            tempSGD->train_one(dat, ind, d, n, y[ind]);
             if (verbosity >= 3) {
                 std::cout << "Done." << std::endl;
             }
@@ -341,6 +387,7 @@ determine_eta0(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n, _SUPV_T* y,
     }
 
     if (alloc_dat_idx) delete[] dat_idx;
+    return *this;
 }
 
 

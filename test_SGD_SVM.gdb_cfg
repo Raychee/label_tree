@@ -1,0 +1,13 @@
+set args data/data2.txt  data/model2.txt data/log2.txt
+b main
+r
+
+b 52
+c
+
+set svm.lambda = 0.01
+set svm.verbosity = 1
+set svm.n_epoch = 10
+set svm.eta0 = 0.1
+
+del

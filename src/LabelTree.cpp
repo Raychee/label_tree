@@ -1,3 +1,4 @@
+# include <cstdlib>
 # include <cstring>
 # include <iostream>
 # include <iomanip>
@@ -10,30 +11,48 @@
 LabelTree::
 LabelTreeNode::LabelTreeNode(DAT_DIM_T _d, unsigned int _nary)
 			  :n_nary(_nary),
+			   b(0),
 			   d(_d),
 			   s_labelset(0),
 			   labelset(NULL),
 			   n_child(0),
+			   child_(NULL),
 			   parent_(NULL) {
-	w     = new COMP_T[d];
-	child = new LabelTreeNode*[n_nary];
+	w = new COMP_T[d];
+	// for (DAT_DIM_T i = 0; i < d; ++i) {
+	// 	w[i] = (COMP_T)std::rand() / RAND_MAX;
+	// }
+	// b = (COMP_T)std::rand() / RAND_MAX;
+	std::memset(w, 0, sizeof(COMP_T) * d);
 }
 LabelTree::
 LabelTreeNode::LabelTreeNode(DAT_DIM_T 	  _d,
 							 unsigned int _nary,
 							 SUPV_T*      _labelset,
-							 SUPV_T       _s_labelset)
+							 SUPV_T       _s_labelset,
+							 bool 		  use_memcpy)
 			  :n_nary(_nary),
+			   b(0),
 			   d(_d),
 			   s_labelset(_s_labelset),
 			   n_child(0),
+			   child_(NULL),
 			   parent_(NULL) {
-	w        = new COMP_T[d];
-	labelset = new SUPV_T[s_labelset];
-	child    = new LabelTreeNode*[n_nary];
-	std::memcpy(labelset, _labelset, sizeof(SUPV_T) * s_labelset);
+	w = new COMP_T[d];
+	// for (DAT_DIM_T i = 0; i < d; ++i) {
+	// 	w[i] = (COMP_T)std::rand() / RAND_MAX;
+	// }
+	// b = (COMP_T)std::rand() / RAND_MAX;
+	std::memset(w, 0, sizeof(COMP_T) * d);
+	if (use_memcpy) {
+		labelset = new SUPV_T[s_labelset];
+		std::memcpy(labelset, _labelset, sizeof(SUPV_T) * s_labelset);
+	}
+	else {
+		labelset = _labelset;
+	}
 	// std::cout << "CREATED:\n";
-	// output_stream(std::cout);
+	// ostream_this(std::cout);
 	// std::cout << "\n";
 }
 
@@ -42,18 +61,24 @@ LabelTreeNode::LabelTreeNode(DAT_DIM_T _d,
 							 unsigned int _nary,
 							 SUPV_T _s_labelset)
 			  :n_nary(_nary),
+			   b(0),
 			   d(_d),
 			   s_labelset(_s_labelset),
 			   n_child(0),
+			   child_(NULL),
 			   parent_(NULL) {
 	w        = new COMP_T[d];
 	labelset = new SUPV_T[s_labelset];
-	child    = new LabelTreeNode*[n_nary];
-	for (SUPV_T i = 1; i <= s_labelset; ++i) {
-		labelset[i] = i;
+	// for (DAT_DIM_T i = 0; i < d; ++i) {
+	// 	w[i] = (COMP_T)std::rand() / RAND_MAX;
+	// }
+	// b = (COMP_T)std::rand() / RAND_MAX;
+	std::memset(w, 0, sizeof(COMP_T) * d);	
+	for (SUPV_T i = 0; i < s_labelset; ++i) {
+		labelset[i] = i + 1;
 	}
 	// std::cout << "CREATED(default):\n";
-	// output_stream(std::cout);
+	// ostream_this(std::cout);
 	// std::cout << "\n";
 }
 
@@ -63,11 +88,11 @@ LabelTreeNode::LabelTreeNode(LabelTree::LabelTreeNode& node)
 			   b(node.b),
 			   d(node.d),
 			   s_labelset(node.s_labelset),
-			   n_child(node.n_child),
+			   n_child(0),
+			   child_(NULL),
 			   parent_(NULL) {
 	w        = new COMP_T[d];
 	labelset = new SUPV_T[s_labelset];
-	child    = new LabelTreeNode*[n_nary];
 	std::memcpy(w, node.w, sizeof(COMP_T) * d);
 	std::memcpy(labelset, node.labelset, sizeof(SUPV_T) * s_labelset);
 }
@@ -76,19 +101,27 @@ LabelTreeNode::LabelTreeNode(LabelTree::LabelTreeNode& node)
 LabelTree::
 LabelTreeNode::~LabelTreeNode() {
 	// std::cout << "DELETED:\n";
-	// output_stream(std::cout);
+	// ostream_this(std::cout);
 	// std::cout << "\n";
 	delete[] w;
 	delete[] labelset;
-	delete[] child;
+	delete[] child_;
 }
 
 LabelTree::LabelTreeNode& LabelTree::
-LabelTreeNode::labels(SUPV_T* _labelset, SUPV_T _s_labelset) {
+LabelTreeNode::labels(SUPV_T* _labelset, SUPV_T _s_labelset,
+					  bool use_memcpy) {
 	if (labelset && s_labelset) delete[] labelset;
-	labelset = new SUPV_T[_s_labelset];
-	s_labelset = _s_labelset;
-	std::memcpy(labelset, _labelset, sizeof(SUPV_T) * s_labelset);
+	if (use_memcpy) {
+		labelset = new SUPV_T[_s_labelset];
+		s_labelset = _s_labelset;
+		std::memcpy(labelset, _labelset, sizeof(SUPV_T) * s_labelset);
+	}
+	else {
+		labelset   = _labelset;
+		s_labelset = _s_labelset;
+	}
+	return *this;
 }
 
 bool LabelTree::
@@ -104,7 +137,7 @@ LabelTreeNode::has_label(SUPV_T _label) const {
 		if (end - begin <= 1) {
 			return false;
 		}
-		mid = (begin + end) / 2;
+		mid   = (begin + end) / 2;
 		label = labelset[mid];
 	}
 	return true;
@@ -117,21 +150,29 @@ LabelTreeNode::attach_child(LabelTreeNode* ch) {
 				  << "LabelTreeNode is already full." << std::endl;
 		return *this;
 	}
-	ch->parent_ = this;
-	child[n_child++] = ch;
+	if (!n_child || !child_) {
+		child_ = new LabelTreeNode*[n_nary];
+	}
+	ch->parent_       = this;
+	child_[n_child++] = ch;
 	return *this;
 }
 
 LabelTree::LabelTreeNode& LabelTree::
-LabelTreeNode::attach_child(SUPV_T* _labelset, SUPV_T _s_labelset) {
+LabelTreeNode::attach_child(SUPV_T* _labelset, SUPV_T _s_labelset,
+							bool use_memcpy) {
 	if (n_child >= n_nary) {
 		std::cerr << "Error while attaching a child: "
 				  << "LabelTreeNode is already full." << std::endl;
 		return *this;
 	}
-	LabelTreeNode* ch = new LabelTreeNode(d, n_nary, _labelset, _s_labelset);
-	ch->parent_ = this;
-	child[n_child++] = ch;
+	LabelTreeNode* ch = new LabelTreeNode(d, n_nary, _labelset, _s_labelset,
+										  use_memcpy);
+	if (!n_child || !child_) {
+		child_ = new LabelTreeNode*[n_nary];
+	}
+	ch->parent_       = this;
+	child_[n_child++] = ch;
 	return *this;
 }
 
@@ -140,47 +181,65 @@ LabelTreeNode::attach_children(LabelTreeNode** _child,
 							   unsigned int    _n_child) {
 	if (_n_child >= n_nary) {
 		std::cerr << "Error while attaching children: Too many children. ("
-			 << n_nary << "children at most while trying to attach "
-			 << _n_child << ")" << std::endl;
+			      << n_nary << "children at most while trying to attach "
+			      << _n_child << ")" << std::endl;
 		return *this;
+	}
+	if (!n_child || !child_) {
+		child_ = new LabelTreeNode*[n_nary];
 	}
 	for (unsigned int i = 0; i < _n_child; i++) {
 		_child[i]->parent_ = this;
-		child[i] = _child[i];
+		child_[i]          = _child[i];
 	}
 	n_child = _n_child;
 	return *this;
 }
 
 LabelTree::LabelTreeNode&  LabelTree::
-LabelTreeNode::output_stream(std::ostream& out) {
+LabelTreeNode::ostream_this(std::ostream& out) {
+	out.setf(std::ios_base::left, std::ios_base::adjustfield);
 	out << "LabelTreeNode(" << this << ", parent = "
 		<< parent_ << ")\n    labels   = ";
 	for (SUPV_T i = 0; i < s_labelset; ++i) {
-		out << " " << std::setw(3) << std::setiosflags(std::ios_base::left)
-			<< labelset[i];
+		out << " " << std::setw(3) << labelset[i];
 	}
-	out << "\n    children = ";
+	out << " {\n    w        =";
+	for (DAT_DIM_T i = 0; i < d; ++i) {
+		out << " " << std::setw(14) << w[i];
+	}
+	out << "\n    b        = " << std::setw(14) << b;
+	
+	out << "\n    children =";
 	if (n_child) {
 		for (unsigned int i = 0; i < n_child; i++) {
-			out << " " << child[i];
+			out << " " << child_[i];
 		}
 	}
 	else {
-		out << "NULL";
+		out << " NULL";
 	}
 	out << "\n}";
 	return *this;
 }
 
 COMP_T LabelTree::
-LabelTreeNode::compute_score(COMP_T* dat_i) {
+LabelTreeNode::compute_score(COMP_T* dat_i) const {
 	COMP_T score = 0;
 	for (DAT_DIM_T i = 0; i < d; ++i) {
 		score += dat_i[i] * w[i];
 	}
 	score += b;
 	return score;
+}
+
+COMP_T LabelTree::
+LabelTreeNode::compute_norm() const {
+	COMP_T norm = 0;
+	for (DAT_DIM_T i = 0; i < d; ++i) {
+		norm += w[i] * w[i];
+	}
+	return norm;
 }
 
 LabelTree::LabelTreeNode&  LabelTree::
@@ -259,6 +318,7 @@ LabelTree::iterator LabelTree::iterator::operator++(int) {
 LabelTree::LabelTree(DAT_DIM_T 	  _d,
 			  		 SUPV_T       _s_labelset,
 					 unsigned int _nary,
+					 COMP_T 	  _lambda,
 			  		 char         _verbosity,
         	  		 COMP_T       _eta0,
         	  		 unsigned int _n_epoch,
@@ -268,24 +328,32 @@ LabelTree::LabelTree(DAT_DIM_T 	  _d,
           										   _eta0,
           										   _n_epoch,
           										   _eta0_1st_try,
-          										   _eta0_try_factor) {
+          										   _eta0_try_factor),
+           lambda(_lambda),
+           path(NULL),
+           depth(NULL),
+           s_labelset(_s_labelset),
+           path_up_to_date(false) {
     root_ = new LabelTreeNode(_d, _nary, _s_labelset);
+    score = new COMP_T[_nary];
 }
 
 LabelTree::LabelTree(LabelTree& tree)
 		  :SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T>(tree),
-		   lambda(tree.lambda) {
+		   lambda(tree.lambda),
+		   s_labelset(tree.s_labelset),
+		   path_up_to_date(tree.path_up_to_date) {
+	// duplicate all the tree nodes
 	root_ = new LabelTreeNode(*tree.root_);
 	std::queue<LabelTreeNode*> breadth_first_traverse;
 	std::queue<LabelTreeNode*> breadth_first_traverse_dup;
-	LabelTreeNode* cur, * cur_dup;
+	LabelTreeNode*  cur, * cur_dup;
 	LabelTreeNode** cur_ch;
-	unsigned int cur_n_ch;
 	breadth_first_traverse.push(tree.root_);
 	breadth_first_traverse_dup.push(root_);
 	while (!breadth_first_traverse.empty()) {
 		cur = breadth_first_traverse.front();
-		cur_n_ch = cur->num_of_children();
+		unsigned int cur_n_ch = cur->num_of_children();
 		if (cur_n_ch) {
 			cur_dup = breadth_first_traverse_dup.front();
 			cur_ch = cur->children();
@@ -299,13 +367,106 @@ LabelTree::LabelTree(LabelTree& tree)
 		breadth_first_traverse.pop();
 		breadth_first_traverse_dup.pop();
 	}
+	// duplicate the cache
+	if (!tree.depth || !tree.path) {
+		path  = NULL;
+		depth = NULL;
+	}
+	else {
+		path  = new unsigned int* [s_labelset];
+		depth = new SUPV_T[s_labelset];
+		if (path_up_to_date) {
+			std::memcpy(depth, tree.depth, sizeof(SUPV_T) * s_labelset);
+			for (SUPV_T i = 0; i < s_labelset; ++i) {
+				path[i] = new unsigned int [depth[i]];
+				std::memcpy(path[i], tree.path[i],
+							sizeof(unsigned int) * depth[i]);
+			}
+		}
+	}
+	score = new COMP_T[root_->nary()];
 }
 
 /**** Destructor ****/
 LabelTree::~LabelTree() {
-	for (iterator i = begin(); i != end(); ++i) {
-		delete &i;
+	// delete all the tree nodes
+	std::queue<LabelTreeNode*> breadth_first_traverse;
+	breadth_first_traverse.push(root_);
+	while (!breadth_first_traverse.empty()) {
+		LabelTreeNode* cur      = breadth_first_traverse.front();
+		unsigned int   cur_n_ch = cur->num_of_children();
+		if (cur_n_ch) {
+			LabelTreeNode** cur_ch = cur->children();
+			for (unsigned int i = 0; i < cur_n_ch; i++) {
+				breadth_first_traverse.push(cur_ch[i]);
+			}
+		}
+		breadth_first_traverse.pop();
+		delete cur;
 	}
+	// delete cache
+	if (path) {
+		for (SUPV_T i = 0; i < s_labelset; ++i) {
+			delete[] path[i];
+		}
+	}
+	delete[] path;
+	delete[] depth;
+	delete[] score;
+}
+
+void LabelTree::rand_data_index(N_DAT_T* index, SUPV_T* y, N_DAT_T n) {
+// WARNING: current implementation can generate random integers only less than 
+// maximum value of type "int" because of the restrictions of rand() from C 
+// standard library.
+	SUPV_T* s_dat_of_label  = new SUPV_T[s_labelset];
+	double* p_dat_of_label  = new double[s_labelset];
+	double* st_dat_of_label = new double[s_labelset];
+	std::forward_list<N_DAT_T>* candidate = 
+		new std::forward_list<N_DAT_T>[s_labelset];
+	std::memset(s_dat_of_label, 0, sizeof(SUPV_T) * (s_labelset));
+	std::memset(p_dat_of_label, 0, sizeof(double) * (s_labelset));
+	for (N_DAT_T i = 0; i < n; ++i) {
+		++s_dat_of_label[y[i]-1];
+		candidate[y[i]-1].push_front(i);
+	}
+	SUPV_T most_dat_of_label  = s_dat_of_label[0];
+	for (SUPV_T i = 1; i < s_labelset; ++i) {
+		if (s_dat_of_label[i] > most_dat_of_label) {
+			most_dat_of_label = s_dat_of_label[i];
+		}
+	}
+	for (SUPV_T i = 0; i < s_labelset; ++i) {
+		st_dat_of_label[i] = (double)s_dat_of_label[i] / most_dat_of_label;
+	}
+	N_DAT_T count = 0;
+	while (count < n) {
+		for (SUPV_T i = 0; i < s_labelset; ++i) {
+			p_dat_of_label[i] += st_dat_of_label[i];
+			if (p_dat_of_label[i] >= 1) {
+				if (!candidate[i].empty()) {
+					N_DAT_T rand_i = std::rand() % s_dat_of_label[i];
+					typename std::forward_list<N_DAT_T>::iterator it0 = 
+			            candidate[i].before_begin();
+			        typename std::forward_list<N_DAT_T>::iterator it1 = 
+			            candidate[i].begin();
+			        for (N_DAT_T i = 0; i < rand_i; ++i) {
+			            ++it0;
+			            ++it1;
+			        }
+			        index[count++] = *it1;
+			        candidate[i].erase_after(it0);
+			        --s_dat_of_label[i];
+			    }
+			    --p_dat_of_label[i];
+			}
+		}
+	}
+
+	delete[] s_dat_of_label;
+	delete[] p_dat_of_label;
+	delete[] st_dat_of_label;
+	delete[] candidate;
 }
 
 LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i,
@@ -313,71 +474,132 @@ LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i,
 	COMP_T* 	   dat_i      = dat + d * i;
 	LabelTreeNode* start_node = root_;
 	unsigned int   n_child    = start_node->num_of_children();
-	COMP_T 		   score      = new COMP_T[root_->nary()];
+	COMP_T		   max_loss   = 0;
+
+	if (!path_up_to_date) update_path();
+	unsigned int*  path_y 	  = path[y - 1];
+	SUPV_T		   step_count = 0;
+	LabelTreeNode* node_to_incre_score;
+	LabelTreeNode* node_to_reduce_score;
+
 	while (n_child) {
 		LabelTreeNode** child = start_node->children();
 		std::memset(score, 0, sizeof(COMP_T) * n_child);
 		for (unsigned int i = 0; i < n_child; ++i) {
 			score[i] = child[i]->compute_score(dat_i);
 		}
+		unsigned int path_y_i = path_y[step_count];
+		// score[path_y_i]--;			// is this needed ?
 		unsigned int score_i = max(score, n_child);
-		if (child[score_i]->has_label(y)) {
-			for (unsigned int i = 0; i < n_child; ++i) {
-				child[i]->update_no_loss(eta, lambda);
-			}
-			start_node = child[score_i];
-		}
-		else {
-			for (unsigned int i = 0; i < n_child; ++i) {
-				if (child[i]->has_label(y)) {
-					child[i]->update_incre_score(eta, lambda, dat_i, n);
-					start_node = child[i];
-				}
-				else if (i == score_i) {
-					child[score_i]->update_reduce_score(eta, lambda, dat_i, n);					
-				}
-				else {
-					child[i]->update_no_loss;
-				}
+		if (score_i != path_y_i) {
+			COMP_T cur_loss = score[score_i] - score[path_y_i];
+			if (cur_loss > max_loss) {
+				node_to_reduce_score = child[score_i];
+				node_to_incre_score  = child[path_y_i];
+				max_loss = cur_loss;
 			}
 		}
+		start_node = child[path_y_i];
+		step_count++;
 		n_child = start_node->num_of_children();
 	}
+
+	iterator it = begin();
+	for (++it; &it; ++it) {
+		if (&it == node_to_reduce_score) {
+			it->update_reduce_score(eta, lambda, dat_i, n);
+		}
+		else if (&it == node_to_incre_score) {
+			it->update_incre_score(eta, lambda, dat_i, n);
+		}
+		else {
+			it->update_no_loss(eta, lambda);
+		}
+	}
+
+	return *this;
 }
 
 SUPV_T LabelTree::test_one(COMP_T* dat_i, DAT_DIM_T d) const {
 	LabelTreeNode* node    = root_;
-	unsigned int   n_child = start_node->num_of_children();
-	COMP_T 		   score   = new COMP_T[root_->nary()];
+	unsigned int   n_child = node->num_of_children();
 	while (n_child) {
 		LabelTreeNode** child = node->children();
 		std::memset(score, 0, sizeof(COMP_T) * n_child);
 		for (unsigned int i = 0; i < n_child; ++i) {
 			score[i] = child[i]->compute_score(dat_i);
 		}
-		unsigned int score_i = max(score, n_child);
-		node = child[score_i];
-		n_child = node->num_of_children();
+		unsigned int i = max(score, n_child);
+		node           = child[i];
+		n_child        = node->num_of_children();
 	}
 	SUPV_T* labelset = node->labels();
 	return labelset[0];
 }
 
 COMP_T LabelTree::compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n,
-							  SUPV_T* y) const {
-
+							  SUPV_T* y) {
+	COMP_T* dat_i    = dat;
+	COMP_T  loss     = 0;
+	COMP_T  regul    = 0;
+	COMP_T	max_loss = 0;
+	if (!path_up_to_date) update_path();
+	for (N_DAT_T i = 0; i < n; ++i, dat_i += d) {
+		SUPV_T	      y_i      = y[i];
+		unsigned int* path_y_i = path[y_i - 1];
+		SUPV_T		  step_count = 0;
+		LabelTreeNode* node = root_;
+		unsigned int n_child = node->num_of_children();
+		while (n_child) {
+			LabelTreeNode** child = node->children();
+			std::memset(score, 0, sizeof(COMP_T) * n_child);
+			for (unsigned int j = 0; j < n_child; ++j) {
+				score[j] = child[j]->compute_score(dat_i);
+			}
+			unsigned int path_y_i_step = path_y_i[step_count];
+			// score[path_y_i_step]--;		// is this needed ?
+			unsigned int j = max(score, n_child);
+			if (j != path_y_i_step) {
+				COMP_T cur_loss = score[j] - score[path_y_i_step];
+				max_loss = cur_loss > max_loss ? cur_loss : max_loss;
+			}
+			node = child[path_y_i_step];
+			step_count++;
+			n_child = node->num_of_children();
+		}
+		loss += max_loss;
+	}
+	iterator it = begin();
+	for (++it; &it; ++it) {
+		regul += it->compute_norm();
+	}
+	return lambda * regul + loss / n;
 }
 
-LabelTree& LabelTree::output_stream(std::ostream& out) {
+LabelTree& LabelTree::ostream_this(std::ostream& out) {
 	out << "Tree Nodes are as follows (start from root):";
 	for (iterator i = begin(); i != end(); ++i) {
 		out << "\n";
-		i->output_stream(out);
+		i->ostream_this(out);
+	}
+	if (path_up_to_date) {
+		for (SUPV_T i = 0; i < s_labelset; ++i) {
+			out << "\nPath for label " << i + 1 << "\n";
+			unsigned int* path_i = path[i];
+			out << std::setw(3) << path_i[0];
+			for (SUPV_T j = 1; j < depth[i]; ++j) {
+				out << " -> " << std::setw(3) << path_i[j];
+			}
+		}
 	}
 	return *this;
 }
 
-unsigned int max(COMP_T* array, unsigned int length) {
+LabelTree& LabelTree::ostream_param(std::ostream& out) {
+	return *this;
+}
+
+unsigned int LabelTree::max(COMP_T* array, unsigned int length) const {
 	COMP_T       cur_max   = array[0];
 	unsigned int cur_max_i = 0;
 	for (unsigned int i = 1; i < length; ++i) {
@@ -388,3 +610,61 @@ unsigned int max(COMP_T* array, unsigned int length) {
 	}
 	return cur_max_i;
 }
+
+void LabelTree::update_path() {
+	bool nothing = !path || !depth;
+	if (nothing) {
+		path  = new unsigned int* [s_labelset];
+		depth = new SUPV_T[s_labelset];
+	}
+	std::memset(depth, 0, sizeof(SUPV_T) * s_labelset);
+	
+	std::queue<LabelTreeNode*> breadth_first_traverse;
+	breadth_first_traverse.push(root_);
+	while (!breadth_first_traverse.empty()) {
+		LabelTreeNode* node = breadth_first_traverse.front();
+		unsigned int n_child = node->num_of_children();
+		if (n_child) {
+			LabelTreeNode** child = node->children();
+			for (unsigned int i = 0; i < n_child; ++i) {
+				SUPV_T  _s_labelset = child[i]->num_of_labels();
+				SUPV_T* labelset    = child[i]->labels();
+				for (SUPV_T j = 0; j < _s_labelset; ++j) {
+					depth[labelset[j] - 1]++;
+				}
+				breadth_first_traverse.push(child[i]);
+			}
+		}
+		breadth_first_traverse.pop();
+	}
+
+	for (SUPV_T i = 0; i < s_labelset; ++i) {
+		if (!nothing) delete[] path[i];
+		path[i] = new unsigned int [depth[i]];
+	}
+
+	SUPV_T* step_count = new SUPV_T[s_labelset];
+	std::memset(step_count, 0, sizeof(SUPV_T) * s_labelset);
+	breadth_first_traverse.push(root_);
+	while (!breadth_first_traverse.empty()) {
+		LabelTreeNode* node = breadth_first_traverse.front();
+		unsigned int n_child = node->num_of_children();
+		if (n_child) {
+			LabelTreeNode** child = node->children();
+			for (unsigned int i = 0; i < n_child; ++i) {
+				SUPV_T  _s_labelset = child[i]->num_of_labels();
+				SUPV_T* labelset    = child[i]->labels();
+				for (SUPV_T j = 0; j < _s_labelset; ++j) {
+					path[labelset[j] - 1][step_count[labelset[j] - 1]++] = i;
+				}
+				breadth_first_traverse.push(child[i]);
+			}
+		}
+		breadth_first_traverse.pop();
+	}
+
+	path_up_to_date = true;
+	delete[] step_count;
+}
+
+void LabelTree::gdb_output() { ostream_this(std::cout); }

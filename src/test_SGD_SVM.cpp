@@ -22,7 +22,13 @@ int verbosity = 2;
 
 int main(int argc, const char * argv[])
 {
+    if (argc <= 1) {
+        cerr << "Not enough parameters." << endl;
+        exit(1);
+    }
+
     COMP_T* x; DAT_DIM_T d; N_DAT_T n; SUPV_T* y;
+    ofstream file_2, file_3;
 
     read_samples(argv[1], x, d, n, y);
 
@@ -39,19 +45,39 @@ int main(int argc, const char * argv[])
     }
 
     SGD_SVM svm(d, 0.2, 1, 2);
+    if (argc >= 4) {
+        file_3.open(argv[3]);
+        svm.ostream_of_training_process(file_3);
+    }
     svm.train(x, d, n, y);
+    file_3.close();
 
     cout << svm << endl;
 
-    cout << "Write to file? ";
-    char yes_no;
-    cin >> yes_no;
-    if (yes_no == 'y') {
-        ofstream file("../data/model.txt");
-        file << svm << endl;
-        file.close();
+    COMP_T* x_i            = x;
+    N_DAT_T num_of_correct = 0;
+    cout << "Testing...\nTruth\tTest\tData\n";
+    for (N_DAT_T i = 0; i < n; ++i, x_i += d) {
+        SUPV_T y_i = svm.test_one(x_i, d);
+        cout << y[i] << "\t" << y_i;
+        for (DAT_DIM_T j = 0; j < d; ++j) {
+            cout << setw(16) << x[i * d + j];
+        }
+        cout << "\n";
+        if (y[i] == y_i) {
+             num_of_correct++;
+        }
     }
-    cout << "Done" << endl;
+    cout << "Accuracy = " << (COMP_T)num_of_correct / n
+         << " (" << num_of_correct << "/" << n << ")" << endl;
+
+    if (argc >= 3) {
+        cout << "Writing to file " << argv[2] << " ... " << flush;
+        file_2.open(argv[2]);
+        file_2 << svm << endl;
+        file_2.close();
+        cout << "Done." << endl;
+    }
 
     delete[] x;
     delete[] y;

@@ -41,4 +41,4 @@ svm_light:
 
 test:
 # $(CC) $(CFLAGS) $(LFLAGS) $(LIBS) test.cpp -o ../bin/test
-	$(CC) $(CFLAGS) -lc++ test.cpp SGD_SVM.cpp -o ../bin/test
+	$(CC) $(CFLAGS) -lc++ test.cpp LabelTree.cpp -o ../bin/test

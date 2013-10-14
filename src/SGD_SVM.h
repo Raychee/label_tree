@@ -38,9 +38,10 @@ public:
 
     virtual SGD_SVM& train_one(COMP_T* dat, N_DAT_T i,
                                DAT_DIM_T d, N_DAT_T n, SUPV_T y);
-    virtual SUPV_T   test_one(COMP_T* dat_i, DAT_DIM_T d);
+    virtual SUPV_T   test_one(COMP_T* dat_i, DAT_DIM_T d) const;
     virtual COMP_T   compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n, SUPV_T*y);
-    virtual SGD_SVM& output_stream(std::ostream& out);
+    virtual SGD_SVM& ostream_this(std::ostream& out);
+    virtual SGD_SVM& ostream_param(std::ostream& out);
 
 private:
     COMP_T*   w;        // weight vector of the linear svm classifier
@@ -56,10 +57,11 @@ private:
         return eta0 / (1 + lambda * eta0 * t);
     }
 
-    COMP_T compute_margin(COMP_T* dat_i, DAT_DIM_T d);
-    COMP_T compute_loss(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y);
+    COMP_T compute_margin(COMP_T* dat_i, DAT_DIM_T d) const;
+    COMP_T compute_loss(COMP_T* dat_i, DAT_DIM_T d, SUPV_T y) const;
     // compute the loss for one input data
-};
 
+    // DEBUG
+};
 
 # endif
