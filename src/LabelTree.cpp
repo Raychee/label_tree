@@ -32,18 +32,18 @@ LabelTreeNode::LabelTreeNode(DAT_DIM_T 	  _d,
 							 SUPV_T       _s_labelset,
 							 bool 		  use_memcpy)
 			  :n_nary(_nary),
-			   b(0),
+			   // b(0),
 			   d(_d),
 			   s_labelset(_s_labelset),
 			   n_child(0),
 			   child_(NULL),
 			   parent_(NULL) {
 	w = new COMP_T[d];
-	// for (DAT_DIM_T i = 0; i < d; ++i) {
-	// 	w[i] = (COMP_T)std::rand() / RAND_MAX;
-	// }
-	// b = (COMP_T)std::rand() / RAND_MAX;
-	std::memset(w, 0, sizeof(COMP_T) * d);
+	for (DAT_DIM_T i = 0; i < d; ++i) {
+		w[i] = (COMP_T)std::rand() / RAND_MAX;
+	}
+	b = (COMP_T)std::rand() / RAND_MAX;
+	// std::memset(w, 0, sizeof(COMP_T) * d);
 	if (use_memcpy) {
 		labelset = new SUPV_T[s_labelset];
 		std::memcpy(labelset, _labelset, sizeof(SUPV_T) * s_labelset);
@@ -61,7 +61,7 @@ LabelTreeNode::LabelTreeNode(DAT_DIM_T _d,
 							 unsigned int _nary,
 							 SUPV_T _s_labelset)
 			  :n_nary(_nary),
-			   b(0),
+			   // b(0),
 			   d(_d),
 			   s_labelset(_s_labelset),
 			   n_child(0),
@@ -69,11 +69,11 @@ LabelTreeNode::LabelTreeNode(DAT_DIM_T _d,
 			   parent_(NULL) {
 	w        = new COMP_T[d];
 	labelset = new SUPV_T[s_labelset];
-	// for (DAT_DIM_T i = 0; i < d; ++i) {
-	// 	w[i] = (COMP_T)std::rand() / RAND_MAX;
-	// }
-	// b = (COMP_T)std::rand() / RAND_MAX;
-	std::memset(w, 0, sizeof(COMP_T) * d);	
+	for (DAT_DIM_T i = 0; i < d; ++i) {
+		w[i] = (COMP_T)std::rand() / RAND_MAX;
+	}
+	b = (COMP_T)std::rand() / RAND_MAX;
+	// std::memset(w, 0, sizeof(COMP_T) * d);	
 	for (SUPV_T i = 0; i < s_labelset; ++i) {
 		labelset[i] = i + 1;
 	}
@@ -252,10 +252,10 @@ LabelTreeNode::update_no_loss(COMP_T eta, COMP_T lambda) {
 }
 
 LabelTree::LabelTreeNode&  LabelTree::
-LabelTreeNode::update_reduce_score(COMP_T eta, COMP_T lambda,
+LabelTreeNode::update_decre_score(COMP_T eta, COMP_T lambda,
 								   COMP_T* dat_i, N_DAT_T n) {
 	COMP_T term_1 = 1 - eta * lambda;
-	COMP_T term_2 = eta / n;
+	COMP_T term_2 = eta;
 	for (DAT_DIM_T i = 0; i < d; ++i) {
 		w[i] = w[i] * term_1 - dat_i[i] * term_2;
 	}
@@ -268,7 +268,7 @@ LabelTree::LabelTreeNode&  LabelTree::
 LabelTreeNode::update_incre_score(COMP_T eta, COMP_T lambda,
 								  COMP_T* dat_i, N_DAT_T n) {
 	COMP_T term_1 = 1 - eta * lambda;
-	COMP_T term_2 = eta / n;
+	COMP_T term_2 = eta;
 	for (DAT_DIM_T i = 0; i < d; ++i) {
 		w[i] = w[i] * term_1 + dat_i[i] * term_2;
 	}
@@ -420,12 +420,12 @@ void LabelTree::rand_data_index(N_DAT_T* index, SUPV_T* y, N_DAT_T n) {
 // maximum value of type "int" because of the restrictions of rand() from C 
 // standard library.
 	SUPV_T* s_dat_of_label  = new SUPV_T[s_labelset];
-	double* p_dat_of_label  = new double[s_labelset];
-	double* st_dat_of_label = new double[s_labelset];
+	COMP_T* p_dat_of_label  = new COMP_T[s_labelset];
+	COMP_T* st_dat_of_label = new COMP_T[s_labelset];
 	std::forward_list<N_DAT_T>* candidate = 
 		new std::forward_list<N_DAT_T>[s_labelset];
 	std::memset(s_dat_of_label, 0, sizeof(SUPV_T) * (s_labelset));
-	std::memset(p_dat_of_label, 0, sizeof(double) * (s_labelset));
+	std::memset(p_dat_of_label, 0, sizeof(COMP_T) * (s_labelset));
 	for (N_DAT_T i = 0; i < n; ++i) {
 		++s_dat_of_label[y[i]-1];
 		candidate[y[i]-1].push_front(i);
@@ -437,7 +437,7 @@ void LabelTree::rand_data_index(N_DAT_T* index, SUPV_T* y, N_DAT_T n) {
 		}
 	}
 	for (SUPV_T i = 0; i < s_labelset; ++i) {
-		st_dat_of_label[i] = (double)s_dat_of_label[i] / most_dat_of_label;
+		st_dat_of_label[i] = (COMP_T)s_dat_of_label[i] / most_dat_of_label;
 	}
 	N_DAT_T count = 0;
 	while (count < n) {
@@ -480,7 +480,7 @@ LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i,
 	unsigned int*  path_y 	  = path[y - 1];
 	SUPV_T		   step_count = 0;
 	LabelTreeNode* node_to_incre_score;
-	LabelTreeNode* node_to_reduce_score;
+	LabelTreeNode* node_to_decre_score;
 
 	while (n_child) {
 		LabelTreeNode** child = start_node->children();
@@ -489,12 +489,12 @@ LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i,
 			score[i] = child[i]->compute_score(dat_i);
 		}
 		unsigned int path_y_i = path_y[step_count];
-		// score[path_y_i]--;			// is this needed ?
+		--score[path_y_i];			// is this needed ?
 		unsigned int score_i = max(score, n_child);
 		if (score_i != path_y_i) {
 			COMP_T cur_loss = score[score_i] - score[path_y_i];
 			if (cur_loss > max_loss) {
-				node_to_reduce_score = child[score_i];
+				node_to_decre_score = child[score_i];
 				node_to_incre_score  = child[path_y_i];
 				max_loss = cur_loss;
 			}
@@ -506,8 +506,8 @@ LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i,
 
 	iterator it = begin();
 	for (++it; &it; ++it) {
-		if (&it == node_to_reduce_score) {
-			it->update_reduce_score(eta, lambda, dat_i, n);
+		if (&it == node_to_decre_score) {
+			it->update_decre_score(eta, lambda, dat_i, n);
 		}
 		else if (&it == node_to_incre_score) {
 			it->update_incre_score(eta, lambda, dat_i, n);
@@ -557,7 +557,7 @@ COMP_T LabelTree::compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n,
 				score[j] = child[j]->compute_score(dat_i);
 			}
 			unsigned int path_y_i_step = path_y_i[step_count];
-			// score[path_y_i_step]--;		// is this needed ?
+			--score[path_y_i_step];		// is this needed ?
 			unsigned int j = max(score, n_child);
 			if (j != path_y_i_step) {
 				COMP_T cur_loss = score[j] - score[path_y_i_step];
@@ -596,6 +596,18 @@ LabelTree& LabelTree::ostream_this(std::ostream& out) {
 }
 
 LabelTree& LabelTree::ostream_param(std::ostream& out) {
+	static LabelTreeNode* node;
+	if (!node) {
+		iterator it = begin();
+		for (SUPV_T i = 0; i < 3; ++i, ++it);
+		node = &it;
+	}
+	COMP_T* w   = node->weight();
+	DAT_DIM_T d = node->dimension();
+	for (DAT_DIM_T i = 0; i < d; ++i) {
+		out << w[i] << " ";
+	}
+	out << node->bias();
 	return *this;
 }
 

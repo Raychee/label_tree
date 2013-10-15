@@ -123,9 +123,7 @@ private:
 
     bool         comp_obj_each_epoch;
     // whether to compute the objective value after each epoch
-    bool         balanced_rand;
-    // whether to generate a label-balanced semi-random index array
-
+    
     _COMP_T eta0_1st_try;       // the first guess of eta0
                                 // (if eta0 is not specified by user)
     _COMP_T eta0_try_factor;    // the factor that eta0 multiplies for each try
@@ -254,8 +252,9 @@ train_epoch(_COMP_T* dat, _DAT_DIM_T d, _N_DAT_T n,
 
         // DEBUG
         if (out_training_proc) {
+            *out_training_proc << compute_obj(dat, d, n, y) << " ";
             ostream_param(*out_training_proc);
-            *out_training_proc << " " << compute_obj(dat, d, n, y) << "\n";
+            *out_training_proc << "\n";
         }
     }
     return *this;

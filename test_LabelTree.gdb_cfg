@@ -1,4 +1,4 @@
-set args data/data6.txt # data/model6.txt
+set args data/data6.txt #data/model6.txt data/log6.txt
 b main
 r
 
@@ -6,9 +6,9 @@ b 34
 c
 
 set tree.n_epoch = 10
-set tree.lambda = 0.01
-set tree.verbosity = 2
-set tree.comp_obj_each_epoch = true
-set tree.eta0 = 1
+set tree.lambda = 0.000001
+set tree.verbosity = 1
+set tree.comp_obj_each_epoch = false
+set tree.eta0 = 0.1
 
 del

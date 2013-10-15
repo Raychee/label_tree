@@ -1,4 +1,4 @@
-set args data/data2.txt  data/model2.txt data/log2.txt
+set args data/data2.txt  #data/model2.txt data/log2.txt
 b main
 r
 

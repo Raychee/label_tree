@@ -121,7 +121,7 @@ data = get(handles.cordinate, 'UserData');
 intv = str2num(get(handles.interval, 'String'));
 set(handles.show_status, 'String', '正在绘图...');
 for i = 2:size(data, 1)
-    line('XData', data(i-1:i, 1), 'YData', data(i-1:i, 2), ...
+    line('XData', data(i-1:i, 2), 'YData', data(i-1:i, 3), ...
         'Marker', '.', 'MarkerSize', 6);
     pause(intv);
 end
@@ -153,7 +153,7 @@ data = get(handles.cordinate, 'UserData');
 intv = str2num(get(handles.interval, 'String'));
 set(handles.show_status, 'String', '正在绘图...');
 for i = 2:size(data, 1)
-    line('XData', i-1:i, 'YData', data(i-1:i, 3), ...
+    line('XData', i-1:i, 'YData', data(i-1:i, 4), ...
         'Marker', '.', 'MarkerSize', 6);
     pause(intv);
 end
@@ -207,7 +207,7 @@ data = get(handles.cordinate, 'UserData');
 intv = str2num(get(handles.interval, 'String'));
 set(handles.show_status, 'String', '正在绘图...');
 for i = 2:size(data, 1)
-    line('XData', i-1:i, 'YData', data(i-1:i, 4), ...
+    line('XData', i-1:i, 'YData', data(i-1:i, 1), ...
         'Marker', '.', 'MarkerSize', 6);
     pause(intv);
 end

@@ -7,12 +7,16 @@
 
 typedef double        COMP_T;
 // type of the value to be computed (parameters, training samples, etc)
+// recommend: double / float
 typedef unsigned long SUPV_T;
 // type of the supervising information (classes, labels, etc)
+// recommend: any type of integer
 typedef unsigned long N_DAT_T;
 // type of the number of the data set
+// recommend: any type of integer
 typedef unsigned int  DAT_DIM_T;
 // type of the dimension of the data
+// recommend: any type of integer
 
 
 class LabelTree : public SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T> {
@@ -148,6 +152,9 @@ public:
 	LabelTreeNode(DAT_DIM_T _d, unsigned int _nary, SUPV_T _s_labelset);
 	LabelTreeNode(LabelTreeNode& node);
 	~LabelTreeNode();
+	COMP_T*			   weight()              const { return w; }
+	COMP_T 		       bias()                const { return b; }
+	DAT_DIM_T          dimension()           const { return d; }
 	unsigned int 	   nary()                const { return n_nary; }
 	SUPV_T*            labels()              const { return labelset; }
 	LabelTreeNode&     labels(SUPV_T* _labelset, SUPV_T _s_labelset,
@@ -177,7 +184,7 @@ public:
 	// compute w' * w
 	LabelTreeNode&     update_no_loss(COMP_T eta, COMP_T lambda);
 	// update w & b following the LabelTree's update rule 4
-	LabelTreeNode&     update_reduce_score(COMP_T eta, COMP_T lambda,
+	LabelTreeNode&     update_decre_score(COMP_T eta, COMP_T lambda,
 										   COMP_T* dat_i, N_DAT_T n);
 	// update w & b following the LabelTree's update rule 5
 	LabelTreeNode&     update_incre_score(COMP_T eta, COMP_T lambda,
