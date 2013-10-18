@@ -1,8 +1,8 @@
 include ../Makefile.inc
 
-LIBS   = -L../lib -lsvmlight -ljsgd -lopencv_core
-OBJ    = main.o label_tree_common.o LabelTree.o
-TARGET = main
+LIBS   = -L../lib -lopencv_core
+OBJ    = labeltree_train.o SGD_SVM.o LabelTree.o
+TARGET = labeltree_train
 
 ifeq ($(OS), LINUX)
 LFLAGS += -Wl,-rpath,'$$ORIGIN/../lib'
@@ -17,17 +17,19 @@ LIBS   += -lc++
 endif
 
 
-../bin/$(TARGET): $(OBJ) svm_light jsgd
+../bin/$(TARGET): $(OBJ)
 	$(LD) $(LFLAGS) $(LIBS) $(OBJ) -o ../bin/$(TARGET)
 	
-main.o: main.cpp label_tree_common.o LabelTree.o
+labeltree_train.o: labeltree_train.cpp SGD_SVM.o LabelTree.o
 	$(CC) $(CFLAGS) -c $< -o $@
 	
-label_tree_common.o: label_tree_common.cpp \
-					 label_tree_common.h StatTable.h List.h jsgd
+# label_tree_common.o: label_tree_common.cpp \
+# 					 label_tree_common.h StatTable.h List.h jsgd
+# 	$(CC) $(CFLAGS) -c $< -o $@
+SGD_SVM.o: SGD_SVM.cpp SGD_SVM.h SGD.h my_typedefs.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-LabelTree.o: LabelTree.cpp LabelTree.h
+LabelTree.o: LabelTree.cpp LabelTree.h SGD.h my_typedefs.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 

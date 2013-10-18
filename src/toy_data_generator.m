@@ -22,7 +22,7 @@ function varargout = toy_data_generator(varargin)
 
 % Edit the above text to modify the response to help toy_data_generator
 
-% Last Modified by GUIDE v2.5 22-Sep-2013 22:57:09
+% Last Modified by GUIDE v2.5 16-Oct-2013 17:19:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes toy_data_generator wait for user response (see UIRESUME)
-% uiwait(handles.visualizer);
+% uiwait(handles.generator);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -78,19 +78,9 @@ function cordinate_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to cordinate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-h_line = get(handles.read_model_tree, 'UserData');
-if ~isempty(h_line)
-    h_visible = get(h_line, 'Visible');
-    ind = find(strcmpi('off', h_visible), 1);
-    if ~isempty(ind)
-        set(h_line(ind), 'Visible', 'On');
-        x = get(h_line(ind), 'XData');
-        y = get(h_line(ind), 'YData');
-        fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
-    end
+if ~strcmp(get(handles.generator, 'UserData'), 'data')
     return;
 end
-
 labelrgb = get(hObject, 'UserData');
 if isempty(labelrgb) || isempty(labelrgb{1})
     return;
@@ -101,6 +91,21 @@ cp = get(hObject, 'CurrentPoint');
 x = cp(1, 1); y = cp(1, 2);
 line('XData', x, 'YData', y, 'UserData', label, ...
     'Marker', '.', 'MarkerSize', 24, 'MarkerEdgeColor', color);
+
+
+
+fprintf('hyperplane: %g * x + %g * y + %g = 0\n', lines(:, i));
+if w(1) > w(2)
+    y = 0 : 1;
+    x = ( - b - w(2) .* y) ./ w(1);
+else
+    x = 0 : 1;
+    y = ( - b - w(1) .* x) ./ w(2);
+end
+fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
+h_line(num_of_nodes) = ...
+    line('XData', x, 'YData', y, 'Visible', 'off');
+
 
 
 
@@ -211,6 +216,8 @@ function cleardata_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 dots = findobj(handles.cordinate, 'Type', 'line');
+delete(dots);
+dots = findobj(handles.cordinate, 'Type', 'hggoup');
 delete(dots);
 set(handles.cordinate, 'XLimMode', 'manual', 'YLimMode', 'manual', ...
     'XLim', [0 1], 'YLim', [0 1]);
@@ -393,8 +400,10 @@ while ~feof(file)
         end
     end
 end
-set(handles.cordinate, 'XLimMode', 'auto', 'YLimMode', 'auto');
-h_line = zeros(num_of_nodes - 1, 1);
+set(handles.cordinate, 'XLimMode', 'manual', 'YLimMode', 'manual', ...
+    'XLim', [0 1], 'YLim', [0 1]);
+num_of_nodes = num_of_nodes - 1;
+lines = zeros(3, num_of_nodes);
 num_of_nodes = 0;
 frewind(file)
 while ~feof(file)
@@ -407,30 +416,23 @@ while ~feof(file)
         line_str = fgetl(file);
         b = sscanf(line_str, '    b        = %g', 1);
         if num_of_nodes == 0
+            line_str = fgetl(file);
+            n_nary = length(regexp(line_str, '\<0x\w{9}\>'));
             num_of_nodes = num_of_nodes + 1;
             continue;
         end
-        fprintf('hyperplane: %g * x + %g * y + %g = 0\n', w(1), w(2), b);
-        if w(1) > w(2)
-            y = 0 : 1;
-            x = ( - b - w(2) .* y) ./ w(1);
-        else
-            x = 0 : 1;
-            y = ( - b - w(1) .* x) ./ w(2);
-        end
-        fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
-        h_line(num_of_nodes) = ...
-            line('XData', x, 'YData', y, 'Visible', 'off');
+        lines(:, num_of_nodes) = [w; b];
         num_of_nodes = num_of_nodes + 1;
     end
 end
 fclose(file);
-set(hObject, 'UserData', h_line);
+set(hObject, 'UserData', {lines, 1, n_nary, []});
+set(handles.generator, 'UserData', 'model_tree');
 
 
 % --- Executes on mouse motion over figure - except title and menu.
-function visualizer_WindowButtonMotionFcn(hObject, eventdata, handles)
-% hObject    handle to visualizer (see GCBO)
+function generator_WindowButtonMotionFcn(hObject, eventdata, handles)
+% hObject    handle to generator (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 cp = get(handles.cordinate, 'CurrentPoint');
@@ -438,3 +440,54 @@ x = cp(1, 1); y = cp(1, 2);
 
 str = sprintf('×ø±ê£º[%.3f, %.3f]', x, y);
 set(handles.show_cordinate, 'String', str);
+
+
+% --- Executes on mouse press over figure background.
+function generator_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to generator (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~strcmp(get(handles.generator, 'UserData'), 'model_tree')
+    return;
+end
+data = get(handles.read_model_tree, 'UserData');
+if isempty(data)
+    return;
+end
+lines = data{1};
+start = data{2};
+nary = data{3};
+h_last = data{4};
+if ~isempty(h_last)
+    delete(h_last);
+    if start > size(lines, 2) - nary + 1
+        set(handles.read_model_tree, 'UserData', {});
+        set(handles.generator, 'UserData', 'data');
+        return;
+    end
+end
+h_last = zeros(nary + 1, 1);
+[X, Y] = meshgrid(0:0.01:1, 0:0.01:1);
+X = reshape(X, [], 1);
+Y = reshape(Y, [], 1);
+scores = zeros(size(X, 1), nary);
+for i = start : start + nary - 1
+    fprintf('hyperplane: %g * x + %g * y + %g = 0\n', ...
+        lines(:, i));
+    w = lines(1:2, i);
+    b = lines(3, i);
+    if w(1) > w(2)
+        y = 0 : 1;
+        x = ( - b - w(2) .* y) ./ w(1);
+    else
+        x = 0 : 1;
+        y = ( - b - w(1) .* x) ./ w(2);
+    end
+    fprintf('line: (%g, %g) -- (%g, %g)\n', x(1), y(1), x(2), y(2));
+    h_last(i - start + 1) = line('XData', x, 'YData', y);
+    scores(:, i - start + 1) = sum(bsxfun(@times, [X, Y], w'), 2) + b;
+end
+[~, label] = max(scores, [], 2);
+h_last(nary + 1) = scatter(X, Y, 24, label);
+start = start + nary;
+set(handles.read_model_tree, 'UserData', {lines, start, nary, h_last});

@@ -315,64 +315,74 @@ LabelTree::iterator LabelTree::iterator::operator++(int) {
 
 /**************************  LabelTree definitions  ***************************/
 /**** Constructor ****/
-LabelTree::LabelTree(DAT_DIM_T 	  _d,
+LabelTree::LabelTree(unsigned int _nary,
+					 DAT_DIM_T 	  _d,
 			  		 SUPV_T       _s_labelset,
-					 unsigned int _nary,
 					 COMP_T 	  _lambda,
 			  		 char         _verbosity,
         	  		 COMP_T       _eta0,
         	  		 unsigned int _n_epoch,
         	  		 COMP_T       _eta0_1st_try,
         	  		 COMP_T       _eta0_try_factor)
-          :SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T>(_verbosity,
+          :SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T>(_d,
+          										   _verbosity,
           										   _eta0,
           										   _n_epoch,
           										   _eta0_1st_try,
           										   _eta0_try_factor),
            lambda(_lambda),
+           n_nary(_nary),
            path(NULL),
            depth(NULL),
            s_labelset(_s_labelset),
            path_up_to_date(false) {
-    root_ = new LabelTreeNode(_d, _nary, _s_labelset);
-    score = new COMP_T[_nary];
+    if (dim>0 && s_labelset>0 && n_nary>0) {
+    	root_ = new LabelTreeNode(_d, _nary, _s_labelset);
+    	score = new COMP_T[_nary];
+    }
+    else {
+    	root_ = NULL;
+    	score = NULL;
+    }
 }
 
 LabelTree::LabelTree(LabelTree& tree)
 		  :SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T>(tree),
 		   lambda(tree.lambda),
+		   n_nary(tree.n_nary),
 		   s_labelset(tree.s_labelset),
 		   path_up_to_date(tree.path_up_to_date) {
-	// duplicate all the tree nodes
-	root_ = new LabelTreeNode(*tree.root_);
-	std::queue<LabelTreeNode*> breadth_first_traverse;
-	std::queue<LabelTreeNode*> breadth_first_traverse_dup;
-	LabelTreeNode*  cur, * cur_dup;
-	LabelTreeNode** cur_ch;
-	breadth_first_traverse.push(tree.root_);
-	breadth_first_traverse_dup.push(root_);
-	while (!breadth_first_traverse.empty()) {
-		cur = breadth_first_traverse.front();
-		unsigned int cur_n_ch = cur->num_of_children();
-		if (cur_n_ch) {
-			cur_dup = breadth_first_traverse_dup.front();
-			cur_ch = cur->children();
-			for (unsigned int i = 0; i < cur_n_ch; i++) {
-				LabelTreeNode* dup = new LabelTreeNode(*cur_ch[i]);
-				cur_dup->attach_child(dup);
-				breadth_first_traverse.push(cur_ch[i]);
-				breadth_first_traverse_dup.push(dup);
+	if (tree.root_) {
+		// duplicate all the tree nodes
+		root_ = new LabelTreeNode(*tree.root_);
+		std::queue<LabelTreeNode*> breadth_first_traverse;
+		std::queue<LabelTreeNode*> breadth_first_traverse_dup;
+		LabelTreeNode*  cur, * cur_dup;
+		LabelTreeNode** cur_ch;
+		breadth_first_traverse.push(tree.root_);
+		breadth_first_traverse_dup.push(root_);
+		while (!breadth_first_traverse.empty()) {
+			cur = breadth_first_traverse.front();
+			unsigned int cur_n_ch = cur->num_of_children();
+			if (cur_n_ch) {
+				cur_dup = breadth_first_traverse_dup.front();
+				cur_ch = cur->children();
+				for (unsigned int i = 0; i < cur_n_ch; i++) {
+					LabelTreeNode* dup = new LabelTreeNode(*cur_ch[i]);
+					cur_dup->attach_child(dup);
+					breadth_first_traverse.push(cur_ch[i]);
+					breadth_first_traverse_dup.push(dup);
+				}
 			}
+			breadth_first_traverse.pop();
+			breadth_first_traverse_dup.pop();
 		}
-		breadth_first_traverse.pop();
-		breadth_first_traverse_dup.pop();
-	}
-	// duplicate the cache
-	if (!tree.depth || !tree.path) {
-		path  = NULL;
-		depth = NULL;
 	}
 	else {
+		root_ = NULL;
+	}
+	if (tree.path && tree.depth) {
+		// duplicate the cache
 		path  = new unsigned int* [s_labelset];
 		depth = new SUPV_T[s_labelset];
 		if (path_up_to_date) {
@@ -383,26 +393,38 @@ LabelTree::LabelTree(LabelTree& tree)
 							sizeof(unsigned int) * depth[i]);
 			}
 		}
+		
 	}
-	score = new COMP_T[root_->nary()];
+	else {
+		path  = NULL;
+		depth = NULL;
+	}
+	if (tree.score) {
+		score = new COMP_T[n_nary];
+	}
+	else {
+		score = NULL;
+	}
 }
 
 /**** Destructor ****/
 LabelTree::~LabelTree() {
 	// delete all the tree nodes
-	std::queue<LabelTreeNode*> breadth_first_traverse;
-	breadth_first_traverse.push(root_);
-	while (!breadth_first_traverse.empty()) {
-		LabelTreeNode* cur      = breadth_first_traverse.front();
-		unsigned int   cur_n_ch = cur->num_of_children();
-		if (cur_n_ch) {
-			LabelTreeNode** cur_ch = cur->children();
-			for (unsigned int i = 0; i < cur_n_ch; i++) {
-				breadth_first_traverse.push(cur_ch[i]);
+	if (root_) {
+		std::queue<LabelTreeNode*> breadth_first_traverse;
+		breadth_first_traverse.push(root_);
+		while (!breadth_first_traverse.empty()) {
+			LabelTreeNode* cur      = breadth_first_traverse.front();
+			unsigned int   cur_n_ch = cur->num_of_children();
+			if (cur_n_ch) {
+				LabelTreeNode** cur_ch = cur->children();
+				for (unsigned int i = 0; i < cur_n_ch; i++) {
+					breadth_first_traverse.push(cur_ch[i]);
+				}
 			}
+			breadth_first_traverse.pop();
+			delete cur;
 		}
-		breadth_first_traverse.pop();
-		delete cur;
 	}
 	// delete cache
 	if (path) {
@@ -413,6 +435,19 @@ LabelTree::~LabelTree() {
 	delete[] path;
 	delete[] depth;
 	delete[] score;
+}
+
+LabelTree& LabelTree::construct() {
+	if (!dim || !s_labelset || !n_nary) {
+		std::cerr << "WARNING: LabelTree: Dimensionality or size of the label "
+				  << "set or the number of branches of the tree has not been "
+                  << "specified. Constructing process is skipped." << std::endl;
+        return *this;
+	}
+	if (!root_) root_ = new LabelTreeNode(dim, n_nary, s_labelset);
+    if (!score) score = new COMP_T[n_nary];
+    path_up_to_date = false;
+    return *this;
 }
 
 void LabelTree::rand_data_index(N_DAT_T* index, SUPV_T* y, N_DAT_T n) {
@@ -469,15 +504,14 @@ void LabelTree::rand_data_index(N_DAT_T* index, SUPV_T* y, N_DAT_T n) {
 	delete[] candidate;
 }
 
-LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i,
-              					DAT_DIM_T d, N_DAT_T n, SUPV_T y) {
-	COMP_T* 	   dat_i      = dat + d * i;
+LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i, N_DAT_T n, SUPV_T* y) {
+	COMP_T* 	   dat_i      = dat + dim * i;
 	LabelTreeNode* start_node = root_;
 	unsigned int   n_child    = start_node->num_of_children();
 	COMP_T		   max_loss   = 0;
 
 	if (!path_up_to_date) update_path();
-	unsigned int*  path_y 	  = path[y - 1];
+	unsigned int*  path_y 	  = path[y[i] - 1];
 	SUPV_T		   step_count = 0;
 	LabelTreeNode* node_to_incre_score;
 	LabelTreeNode* node_to_decre_score;
@@ -520,7 +554,7 @@ LabelTree& LabelTree::train_one(COMP_T* dat, N_DAT_T i,
 	return *this;
 }
 
-SUPV_T LabelTree::test_one(COMP_T* dat_i, DAT_DIM_T d) const {
+SUPV_T LabelTree::test_one(COMP_T* dat_i) const {
 	LabelTreeNode* node    = root_;
 	unsigned int   n_child = node->num_of_children();
 	while (n_child) {
@@ -537,14 +571,13 @@ SUPV_T LabelTree::test_one(COMP_T* dat_i, DAT_DIM_T d) const {
 	return labelset[0];
 }
 
-COMP_T LabelTree::compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n,
-							  SUPV_T* y) {
+COMP_T LabelTree::compute_obj(COMP_T* dat, N_DAT_T n, SUPV_T* y) {
 	COMP_T* dat_i    = dat;
 	COMP_T  loss     = 0;
 	COMP_T  regul    = 0;
 	COMP_T	max_loss = 0;
 	if (!path_up_to_date) update_path();
-	for (N_DAT_T i = 0; i < n; ++i, dat_i += d) {
+	for (N_DAT_T i = 0; i < n; ++i, dat_i += dim) {
 		SUPV_T	      y_i      = y[i];
 		unsigned int* path_y_i = path[y_i - 1];
 		SUPV_T		  step_count = 0;
@@ -603,8 +636,7 @@ LabelTree& LabelTree::ostream_param(std::ostream& out) {
 		node = &it;
 	}
 	COMP_T* w   = node->weight();
-	DAT_DIM_T d = node->dimension();
-	for (DAT_DIM_T i = 0; i < d; ++i) {
+	for (DAT_DIM_T i = 0; i < dim; ++i) {
 		out << w[i] << " ";
 	}
 	out << node->bias();

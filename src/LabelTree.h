@@ -2,21 +2,8 @@
 # define _LABELTREE_H
 
 # include <queue>
+# include "my_typedefs.h"
 # include "SGD.h"
-
-
-typedef double        COMP_T;
-// type of the value to be computed (parameters, training samples, etc)
-// recommend: double / float
-typedef unsigned long SUPV_T;
-// type of the supervising information (classes, labels, etc)
-// recommend: any type of integer
-typedef unsigned long N_DAT_T;
-// type of the number of the data set
-// recommend: any type of integer
-typedef unsigned int  DAT_DIM_T;
-// type of the dimension of the data
-// recommend: any type of integer
 
 
 class LabelTree : public SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T> {
@@ -45,38 +32,35 @@ class LabelTree : public SGD<COMP_T, SUPV_T, DAT_DIM_T, N_DAT_T> {
 // 6. Take node r as the starting node, repeat 1 ~ 6 until r is a leaf.
 
 public:
-	LabelTree(DAT_DIM_T    _d,
-			  SUPV_T 	   _s_labelset,
-			  unsigned int _nary        	= 2,
+	LabelTree(unsigned int _nary        	= 0,
+			  DAT_DIM_T    _d               = 0,
+			  SUPV_T 	   _s_labelset 		= 0,
 			  COMP_T 	   _lambda          = 0.5,
 			  char         _verbosity   	= 1,
         	  COMP_T       _eta0        	= 0,
         	  unsigned int _n_epoch     	= 5,
-        	  COMP_T       _eta0_1st_try	= 0.5,
-        	  COMP_T       _eta0_try_factor = 2);
+        	  COMP_T       _eta0_1st_try	= 0.1,
+        	  COMP_T       _eta0_try_factor = 3);
 	LabelTree(LabelTree& tree);
 	~LabelTree();
 
+	LabelTree& 		   construct();
+	// construct the label tree structure with the confusion matrix
 	COMP_T 			   regul_coef() const { return lambda; }
 	LabelTree&		   regul_coef(COMP_T _lambda)
 					   { lambda = _lambda; return *this; }
 
-	virtual void rand_data_index(N_DAT_T* index, SUPV_T* y, N_DAT_T n);
-    // generate the array of length n which stores the indexes (0 ~ n-1) of the 
-    // data set in a semi-random order: assume total number of labels is "s" and
-    // the numbers of data of any label are euqal, then "index[i]" should be 
-    // the index of data sample of label "y[i%s]".
-	virtual LabelTree& train_one(COMP_T* dat, N_DAT_T i,
-              					 DAT_DIM_T d, N_DAT_T n, SUPV_T y);
-	virtual SUPV_T     test_one(COMP_T* dat_i, DAT_DIM_T d) const;
-	virtual COMP_T     compute_obj(COMP_T* dat, DAT_DIM_T d, N_DAT_T n,
-                               	   SUPV_T* y);
+	virtual COMP_T     compute_obj(COMP_T* dat, N_DAT_T n, SUPV_T* y);
 	virtual LabelTree& ostream_this(std::ostream& out);
 	virtual LabelTree& ostream_param(std::ostream& out);
 
 	class LabelTreeNode;
 
 	LabelTreeNode& 	   root() const { return *root_; }
+	unsigned int  	   nary() const { return n_nary; }
+	LabelTree& 	   	   nary(unsigned int _n_nary) {
+		n_nary = _n_nary; return *this;
+	}
 
 	class iterator {
 	public:
@@ -104,6 +88,7 @@ private:
 
 	// paremeters of the optimization problem
 	COMP_T         lambda;		// regularizing term's coefficient
+	unsigned int   n_nary;		// number of branches of the tree
 
 	// cache variabes to improve performance
 	COMP_T*		   score;
@@ -122,18 +107,25 @@ private:
 	// not available (=NULL) or the tree structure has been modified (e.g. 
 	// function calls like LabelTreeNode::attach_child() etc.)
 
-	virtual LabelTree* get_temp_dup() {
-		return new LabelTree(*this);
-	}
-	virtual COMP_T compute_learning_rate() {
+	virtual void 	   rand_data_index(N_DAT_T* index, SUPV_T* y, N_DAT_T n);
+    // generate the array of length n which stores the indexes (0 ~ n-1) of the 
+    // data set in a semi-random order: the indexes of samples with the same 
+    // label should have a strictly uniform distribution in the whole array
+	virtual LabelTree& train_one(COMP_T* dat, N_DAT_T i, N_DAT_T n, SUPV_T* y);
+	virtual SUPV_T     test_one(COMP_T* dat_i) const;
+	virtual COMP_T 	   compute_learning_rate() {
 		return eta0 / (1 + lambda * eta0 * t);
 	}
-	unsigned int max(COMP_T* array, unsigned int length) const;
+	unsigned int 	   max(COMP_T* array, unsigned int length) const;
 	// return the index of the largest element in "array"
-	void         update_path();
+	void         	   update_path();
 	// update path information of ALL labels
 	// void         update_path(SUPV_T label);
 	// // update path informatio of label "label". sub-program of update_paths()
+
+	virtual LabelTree* get_temp_dup() {
+		return new LabelTree(*this);
+	}
 	void 		 gdb_output();
 };
 
